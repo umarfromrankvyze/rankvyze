@@ -1,5 +1,5 @@
 import { CONTENT_PAGES } from "@/content/pages";
-import { POSTS } from "@/content/blog";
+import { publishedPosts } from "@/lib/blog";
 import { CONTENT_UPDATED, SITE, SITE_URL } from "@/lib/site";
 import { CLAIM_WINDOW_DAYS, GUARANTEE_DAYS, GUARANTEE_MIN_ENGINES, PRICE_LABEL } from "@/lib/guarantee";
 
@@ -13,9 +13,10 @@ import { CLAIM_WINDOW_DAYS, GUARANTEE_DAYS, GUARANTEE_MIN_ENGINES, PRICE_LABEL }
 
 const GUIDES = new Set(["aeo-guide", "docs", "faq"]);
 
-export const dynamic = "force-static";
+export const revalidate = 900;
 
-export function GET() {
+export async function GET() {
+  const posts = await publishedPosts();
   const guides = CONTENT_PAGES.filter((p) => GUIDES.has(p.slug));
   const legal = CONTENT_PAGES.filter((p) => ["privacy", "terms", "security"].includes(p.slug));
   const company = CONTENT_PAGES.filter((p) => ["about", "careers"].includes(p.slug));
@@ -39,7 +40,7 @@ How the measurement works: analysts ask each tracked prompt on each engine in a 
 ${guides.map((p) => `- [${p.title}](${SITE_URL}/${p.slug}): ${p.description}`).join("\n")}
 
 ## Articles
-${POSTS.map((p) => `- [${p.title}](${SITE_URL}/blog/${p.slug}): ${p.description}`).join("\n")}
+${posts.map((p) => `- [${p.title}](${SITE_URL}/blog/${p.slug}): ${p.description}`).join("\n")}
 
 ## Company
 ${company.map((p) => `- [${p.title}](${SITE_URL}/${p.slug}): ${p.description}`).join("\n")}

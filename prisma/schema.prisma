@@ -38,6 +38,7 @@ model User {
   createdAudits    AEOAudit[]         @relation("AuditCreatedBy")
   reviewedChanges  CodeChange[]       @relation("CodeChangeReviewedBy")
   researchSessions ResearchSession[]  @relation("ResearchSessionOwner")
+  signupMeta       SignupMeta?
   refundReviews    RefundRequest[]    @relation("RefundReviewedBy")
 
   @@index([role])
@@ -411,10 +412,10 @@ model Optimization {
 
   title       String
   description String?
-  type        String @default("CONTENT") // CONTENT | SCHEMA | TECHNICAL | INTERNAL_LINKS | ENTITY
-  status      String @default("SUGGESTED") // SUGGESTED | APPROVED | IN_PROGRESS | COMPLETED | REJECTED
-  impactScore Float  @default(5)
-  effort      String @default("MEDIUM") // LOW | MEDIUM | HIGH
+  type        String  @default("CONTENT") // CONTENT | SCHEMA | TECHNICAL | INTERNAL_LINKS | ENTITY
+  status      String  @default("SUGGESTED") // SUGGESTED | APPROVED | IN_PROGRESS | COMPLETED | REJECTED
+  impactScore Float   @default(5)
+  effort      String  @default("MEDIUM") // LOW | MEDIUM | HIGH
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -439,8 +440,8 @@ model CodeChange {
   title   String
   summary String?
 
-  repository String?
-  branch     String?
+  repository   String?
+  branch       String?
   /// Task text handed to the implementing agent
   instructions String?
   /// JSON blob: page URLs, audit context, constraints
@@ -488,12 +489,12 @@ model ContentOpportunity {
 
   title         String
   targetPrompt  String?
-  potential     String @default("MEDIUM") // HIGH | MEDIUM | LOW
-  intent        String @default("COMMERCIAL")
-  contentType   String @default("COMPARISON") // COMPARISON | GUIDE | LISTICLE | FAQ | CASE_STUDY | LANDING_PAGE
-  status        String @default("IDEA") // IDEA | PLANNED | IN_PROGRESS | PUBLISHED
+  potential     String  @default("MEDIUM") // HIGH | MEDIUM | LOW
+  intent        String  @default("COMMERCIAL")
+  contentType   String  @default("COMPARISON") // COMPARISON | GUIDE | LISTICLE | FAQ | CASE_STUDY | LANDING_PAGE
+  status        String  @default("IDEA") // IDEA | PLANNED | IN_PROGRESS | PUBLISHED
   briefing      String?
-  estimatedLift Float  @default(0)
+  estimatedLift Float   @default(0)
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -577,7 +578,7 @@ model ContactMessage {
 /// these are objective checks on the fetched HTML (schema, rendering, crawler
 /// policy) that we can run ourselves. It is the top of the funnel.
 model ScanRequest {
-  id     String @id @default(cuid())
+  id     String  @id @default(cuid())
   url    String
   domain String
   email  String?
@@ -607,13 +608,13 @@ model Order {
 
   status String @default("PENDING") // PENDING | PAID | FAILED | REFUNDED | CANCELED
 
-  provider          String  @default("dodo")
+  provider           String  @default("dodo")
   providerCheckoutId String?
   providerPaymentId  String?
   providerCustomerId String?
 
-  email       String?
-  scanId      String?
+  email  String?
+  scanId String?
 
   paidAt       DateTime?
   refundedAt   DateTime?
@@ -638,10 +639,10 @@ model Order {
 /// the set locked at day 0. Evaluation lives in src/lib/guarantee.ts and reads
 /// AIResearchResult rows — the same source as every other metric.
 model Engagement {
-  id             String @id @default(cuid())
+  id             String  @id @default(cuid())
   organizationId String
   websiteId      String?
-  orderId        String @unique
+  orderId        String  @unique
 
   status String @default("PENDING_PAYMENT")
   // PENDING_PAYMENT | ACTIVE | MET | ELIGIBLE | REFUND_REQUESTED | REFUNDED | DENIED | VOID
@@ -655,10 +656,10 @@ model Engagement {
   baselineSessionId String?
   finalSessionId    String?
 
-  metAt              DateTime?
-  metEngineCount     Int       @default(0)
-  metEvidenceJson    String?
-  evaluatedAt        DateTime?
+  metAt           DateTime?
+  metEngineCount  Int       @default(0)
+  metEvidenceJson String?
+  evaluatedAt     DateTime?
 
   /// Set when a void condition applies (see VOID_REASONS in src/lib/guarantee.ts)
   voidReason String?
@@ -679,8 +680,8 @@ model RefundRequest {
   id           String @id @default(cuid())
   engagementId String @unique
 
-  reason      String?
-  status      String  @default("PENDING") // PENDING | APPROVED | DENIED
+  reason       String?
+  status       String  @default("PENDING") // PENDING | APPROVED | DENIED
   decisionNote String?
 
   requestedAt  DateTime  @default(now())
@@ -695,15 +696,132 @@ model RefundRequest {
 
 /// Raw provider webhooks. `eventId` is unique so redelivery is a no-op.
 model WebhookEvent {
-  id         String   @id @default(cuid())
-  provider   String   @default("dodo")
-  eventId    String
-  type       String
-  payload    String
-  error      String?
-  receivedAt DateTime @default(now())
+  id          String    @id @default(cuid())
+  provider    String    @default("dodo")
+  eventId     String
+  type        String
+  payload     String
+  error       String?
+  receivedAt  DateTime  @default(now())
   processedAt DateTime?
 
   @@unique([provider, eventId])
   @@index([type, receivedAt])
+}
+
+// ---------------------------------------------------------------------------
+// Analytics
+//
+// First-party and deliberately small. We do not call the GA4 API here: that
+// needs a service-account key and a numeric property id (a G-… measurement id
+// is not one), and sampled third-party data would be a worse answer than
+// counting our own requests. Nothing here stores an IP or any other PII.
+// ---------------------------------------------------------------------------
+
+/// One row per anonymous browser per UTC day.
+///
+/// Bounded by construction — a returning visitor updates today's row instead of
+/// appending — which makes it usable for both "who is here right now"
+/// (lastSeenAt) and "unique visitors on day N" (a count of rows for that day).
+model Visit {
+  id        String @id @default(cuid())
+  /// Random id generated client-side and kept in localStorage. Not a user id.
+  visitorId String
+  /// UTC YYYY-MM-DD. Stored as text so the unique index is exact and portable.
+  day       String
+
+  firstSeenAt DateTime @default(now())
+  lastSeenAt  DateTime @default(now())
+  views       Int      @default(1)
+
+  /// Resolved from Vercel's edge headers at request time — absent locally.
+  country String?
+  region  String?
+  city    String?
+
+  landingPath String?
+  lastPath    String?
+  referrer    String?
+  /// utm_source, else the referrer's host, else "direct".
+  source      String?
+  medium      String?
+  campaign    String?
+
+  device  String?
+  browser String?
+  os      String?
+
+  @@unique([visitorId, day])
+  @@index([day])
+  @@index([lastSeenAt])
+  @@index([day, source])
+  @@index([day, country])
+}
+
+/// First-touch attribution, captured once when an account is created.
+///
+/// Separate from User so a signup can be attributed without widening the table
+/// every auth query reads.
+model SignupMeta {
+  id     String @id @default(cuid())
+  userId String @unique
+
+  source      String?
+  medium      String?
+  campaign    String?
+  referrer    String?
+  landingPath String?
+
+  country String?
+  region  String?
+  city    String?
+
+  device  String?
+  browser String?
+  os      String?
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([source])
+  @@index([country])
+}
+
+// ---------------------------------------------------------------------------
+// Blog
+// ---------------------------------------------------------------------------
+
+/// A blog post, authored in the admin console.
+///
+/// `blocksJson` holds the same PostBlock[] shape the renderer has always taken
+/// (src/content/blog/types.ts), so moving authoring into the database changed
+/// where posts are stored and nothing about how they render.
+model BlogPost {
+  id       String  @id @default(cuid())
+  slug     String  @unique
+  title    String
+  seoTitle String?
+
+  description String
+  excerpt     String
+  category    String @default("Guides") // Guides | Research | Technical | Strategy
+
+  /// Comma-separated queries this post is written to answer. Documented, not stuffed.
+  targets String @default("")
+
+  status   String  @default("DRAFT") // DRAFT | PUBLISHED
+  featured Boolean @default(false)
+  /// Lower sorts first on the index. Editorial ranking, not date order.
+  position Int     @default(100)
+
+  /// JSON array of PostBlock.
+  blocksJson String @default("[]")
+
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status, position])
 }

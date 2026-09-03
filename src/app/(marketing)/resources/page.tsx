@@ -4,7 +4,7 @@ import { ArrowRight, BookOpen, FileQuestion, FileText, PenLine } from "lucide-re
 import { Section, SectionHeading } from "@/components/marketing/section";
 import { Reveal } from "@/components/shared/reveal";
 import { FinalCta } from "@/components/marketing/sections/cta";
-import { POSTS } from "@/content/blog";
+import { publishedPosts } from "@/lib/blog";
 
 export const metadata: Metadata = { title: "Resources", description: "Guides, documentation and writing on answer engine optimization." };
 
@@ -15,7 +15,10 @@ const ITEMS = [
   { href: "/faq", icon: FileQuestion, title: "FAQ", text: "Straight answers about what RankVyze does and doesn't do." },
 ];
 
-export default function ResourcesPage() {
+export const revalidate = 300;
+
+export default async function ResourcesPage() {
+  const posts = await publishedPosts();
   return (
     <>
       <Section>
@@ -46,7 +49,7 @@ export default function ResourcesPage() {
               </Link>
             </div>
             <ul className="mt-5 divide-y divide-line border-y border-line">
-              {POSTS.slice(0, 5).map((post) => (
+              {posts.slice(0, 5).map((post) => (
                 <li key={post.slug}>
                   <Link
                     href={`/blog/${post.slug}`}

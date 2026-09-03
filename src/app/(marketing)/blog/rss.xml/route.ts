@@ -1,4 +1,4 @@
-import { POSTS } from "@/content/blog";
+import { publishedPosts } from "@/lib/blog";
 import { SITE, SITE_URL } from "@/lib/site";
 
 /**
@@ -8,7 +8,7 @@ import { SITE, SITE_URL } from "@/lib/site";
  * crawlers all read feeds, and it costs one route to be readable by them.
  */
 
-export const dynamic = "force-static";
+export const revalidate = 900;
 
 function escape(text: string) {
   return text
@@ -18,8 +18,9 @@ function escape(text: string) {
     .replace(/"/g, "&quot;");
 }
 
-export function GET() {
-  const items = POSTS.map((post) => {
+export async function GET() {
+  const posts = await publishedPosts();
+  const items = posts.map((post) => {
     const url = `${SITE_URL}/blog/${post.slug}`;
     return `    <item>
       <title>${escape(post.title)}</title>

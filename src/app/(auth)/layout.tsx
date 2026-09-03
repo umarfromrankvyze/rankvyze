@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Logo, LogoMark } from "@/components/ui/logo";
 import { EngineIcon } from "@/components/ui/engine-icon";
+import { Presence } from "@/components/analytics/presence";
 
 const ENGINES = [
   { key: "chatgpt", value: 87 },
@@ -12,6 +13,8 @@ const ENGINES = [
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="grid min-h-screen lg:grid-cols-[1fr_1fr]">
+      {/* Signup/login are part of the funnel, so they count as site visits. */}
+      <Presence />
       <div className="flex flex-col px-6 py-6 sm:px-10">
         <div className="flex items-center justify-between">
           <Logo />
