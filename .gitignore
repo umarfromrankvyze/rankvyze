@@ -44,3 +44,6 @@ next-env.d.ts
 # local database
 prisma/dev.db*
 
+
+# local database snapshots — never commit customer data
+/backups
