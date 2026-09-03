@@ -92,17 +92,27 @@ export function LoginForm({ googleEnabled, next }: { googleEnabled: boolean; nex
         </Link>
       </p>
 
-      <div className="mt-8 rounded-xl border border-line bg-surface-2 p-4 text-[12.5px] text-ink-muted">
-        <p className="font-medium text-ink">Demo accounts</p>
-        <p className="mt-1">
-          Customer: <code className="rounded bg-white px-1 py-0.5 font-mono text-[11.5px]">demo@acme.com</code> /{" "}
-          <code className="rounded bg-white px-1 py-0.5 font-mono text-[11.5px]">demo1234</code>
-        </p>
-        <p className="mt-0.5">
-          Admin: <code className="rounded bg-white px-1 py-0.5 font-mono text-[11.5px]">admin@rankvyze.com</code> /{" "}
-          <code className="rounded bg-white px-1 py-0.5 font-mono text-[11.5px]">admin1234</code>
-        </p>
-      </div>
+      {/*
+        The seeded customer login, for local development only.
+
+        NODE_ENV is inlined at build time in the client bundle, so this block is
+        not merely hidden in production — it is compiled out and never reaches
+        the browser. It previously rendered on the live site, which published
+        working credentials to anyone who opened /login.
+
+        The staff account is deliberately absent: an admin knows their own
+        password, and printing the address of the account that can approve
+        refunds is free reconnaissance even on localhost.
+      */}
+      {process.env.NODE_ENV !== "production" && (
+        <div className="mt-8 rounded-xl border border-line bg-surface-2 p-4 text-[12.5px] text-ink-muted">
+          <p className="font-medium text-ink">Demo account · local development only</p>
+          <p className="mt-1">
+            Customer: <code className="rounded bg-white px-1 py-0.5 font-mono text-[11.5px]">demo@acme.com</code> /{" "}
+            <code className="rounded bg-white px-1 py-0.5 font-mono text-[11.5px]">demo1234</code>
+          </p>
+        </div>
+      )}
     </div>
   );
 }
