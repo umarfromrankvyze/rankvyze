@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { createSession, isGoogleAuthConfigured } from "@/lib/auth";
+import { recordSignupMeta } from "@/server/signup-meta";
 import { slugify } from "@/lib/utils";
 
 export async function GET(req: Request) {
@@ -48,6 +49,7 @@ export async function GET(req: Request) {
     user = await db.user.create({
       data: { name: profile.name ?? email.split("@")[0], email, image: profile.picture ?? null, role: "CUSTOMER" },
     });
+    await recordSignupMeta(user.id);
     const baseSlug = slugify(user.name.split(" ")[0] || "workspace") || "workspace";
     let slug = baseSlug;
     for (let i = 2; await db.organization.findUnique({ where: { slug } }); i++) slug = `${baseSlug}-${i}`;

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
-import { POSTS } from "@/content/blog";
+import { publishedPosts } from "@/lib/blog";
 import { readingMinutes } from "@/content/blog/types";
 import { Button } from "@/components/ui/button";
 import { BreadcrumbJsonLd, PageJsonLd } from "@/components/seo/json-ld";
@@ -25,8 +25,38 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 }
 
-export default function BlogIndex() {
-  const [lead, ...rest] = POSTS;
+/** Nothing published yet. Reachable if every post is a draft. */
+function EmptyBlog() {
+  return (
+    <div className="container-x py-24">
+      <div className="mx-auto max-w-xl text-center">
+        <p className="eyebrow">Blog</p>
+        <h1 className="mt-4 font-display text-[2rem] font-bold tracking-[-0.03em] text-ink">Nothing published yet.</h1>
+        <p className="mt-4 text-[16px] leading-relaxed text-ink-muted">
+          The first guides are being written. In the meantime, the free scan will tell you where your site stands.
+        </p>
+        <Button size="lg" className="mt-7" asChild>
+          <Link href="/pricing">
+            Analyze My Website <ArrowRight />
+          </Link>
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Posts come from the database, so the page revalidates rather than being
+ * frozen at build time. Publishing from the admin console also calls
+ * revalidatePath, which makes a change visible immediately; this interval is
+ * the backstop for anything that bypasses it.
+ */
+export const revalidate = 300;
+
+export default async function BlogIndex() {
+  const posts = await publishedPosts();
+  if (posts.length === 0) return <EmptyBlog />;
+  const [lead, ...rest] = posts;
 
   return (
     <div className="container-x py-16 md:py-24">
@@ -48,7 +78,7 @@ export default function BlogIndex() {
             name: TITLE,
             description: DESCRIPTION,
             url: `${SITE_URL}/blog`,
-            blogPost: POSTS.map((p) => ({
+            blogPost: posts.map((p) => ({
               "@type": "BlogPosting",
               headline: p.title,
               description: p.description,

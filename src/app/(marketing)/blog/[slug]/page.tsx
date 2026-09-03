@@ -2,21 +2,29 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react";
-import { POSTS, getPost, relatedPosts } from "@/content/blog";
+import { publishedPost, publishedSlugs, relatedPosts } from "@/lib/blog";
 import { postFaq, postSections, readingMinutes } from "@/content/blog/types";
 import { PostBody } from "@/components/blog/post-body";
 import { Button } from "@/components/ui/button";
 import { ArticleJsonLd, BreadcrumbJsonLd, FaqJsonLd } from "@/components/seo/json-ld";
 
-export const dynamicParams = false;
+/**
+ * Posts live in the database now, so a slug published after the last deploy
+ * has to render rather than 404 — hence dynamicParams stays on. Known slugs are
+ * still prerendered at build time; anything newer is rendered on first request
+ * and then cached for the revalidate window.
+ */
+export const dynamicParams = true;
+export const revalidate = 300;
 
-export function generateStaticParams() {
-  return POSTS.map((p) => ({ slug: p.slug }));
+export async function generateStaticParams() {
+  const rows = await publishedSlugs();
+  return rows.map((p) => ({ slug: p.slug }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const post = getPost(slug);
+  const post = await publishedPost(slug);
   if (!post) return {};
 
   return {
@@ -41,12 +49,12 @@ function formatDate(iso: string) {
 
 export default async function BlogPost({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const post = getPost(slug);
+  const post = await publishedPost(slug);
   if (!post) notFound();
 
   const sections = postSections(post);
   const faq = postFaq(post);
-  const related = relatedPosts(post.slug);
+  const related = await relatedPosts(post.slug, post.category);
 
   return (
     <article className="container-x py-12 md:py-20">

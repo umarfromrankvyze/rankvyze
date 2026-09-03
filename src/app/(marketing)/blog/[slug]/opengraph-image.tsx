@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { POSTS, getPost } from "@/content/blog";
+import { publishedPost, publishedSlugs } from "@/lib/blog";
 import { readingMinutes } from "@/content/blog/types";
 
 /**
@@ -12,13 +12,14 @@ export const alt = "RankVyze article";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-export function generateStaticParams() {
-  return POSTS.map((p) => ({ slug: p.slug }));
+export async function generateStaticParams() {
+  const rows = await publishedSlugs();
+  return rows.map((p) => ({ slug: p.slug }));
 }
 
 export default async function BlogOpengraphImage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const post = getPost(slug);
+  const post = await publishedPost(slug);
 
   const logo = await readFile(join(process.cwd(), "public/brand/logo-512.png"));
   const logoSrc = `data:image/png;base64,${logo.toString("base64")}`;

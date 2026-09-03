@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { CONTENT_PAGES } from "@/content/pages";
-import { POSTS } from "@/content/blog";
+import { publishedSlugs } from "@/lib/blog";
 import { CONTENT_UPDATED, SITE_URL } from "@/lib/site";
 
 /**
@@ -11,7 +11,10 @@ import { CONTENT_UPDATED, SITE_URL } from "@/lib/site";
  * `lastModified` doubles as the freshness signal AI crawlers look for, which
  * is why it tracks real content revisions rather than build time.
  */
-export default function sitemap(): MetadataRoute.Sitemap {
+export const revalidate = 900;
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const posts = await publishedSlugs();
   const updated = new Date(CONTENT_UPDATED);
 
   const primary: { path: string; priority: number; freq: MetadataRoute.Sitemap[number]["changeFrequency"] }[] = [
@@ -39,9 +42,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly" as const,
       priority: 0.6,
     })),
-    ...POSTS.map((post) => ({
+    ...posts.map((post) => ({
       url: `${SITE_URL}/blog/${post.slug}`,
-      lastModified: new Date(post.updatedAt ?? post.publishedAt),
+      lastModified: post.updatedAt ?? post.publishedAt ?? post.createdAt,
       changeFrequency: "monthly" as const,
       // Cornerstone posts sit above the standard content pages; the rest match.
       priority: post.featured ? 0.8 : 0.7,

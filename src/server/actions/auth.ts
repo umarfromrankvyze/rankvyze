@@ -7,6 +7,7 @@ import { createSession, destroySession, hashPassword, verifyPassword } from "@/l
 import { flattenErrors, forgotPasswordSchema, resetPasswordSchema, signInSchema, signUpSchema } from "@/lib/validation";
 import { slugify } from "@/lib/utils";
 import { fail, succeed, type ActionResult } from "@/server/types";
+import { recordSignupMeta } from "@/server/signup-meta";
 
 function safeNext(value: FormDataEntryValue | null, fallback: string) {
   const v = typeof value === "string" ? value : "";
@@ -29,6 +30,8 @@ export async function signUp(_prev: ActionResult, formData: FormData): Promise<A
   const user = await db.user.create({
     data: { name, email: email.toLowerCase(), passwordHash, role: "CUSTOMER" },
   });
+
+  await recordSignupMeta(user.id);
 
   // Every customer gets an organization; onboarding fills in the website.
   const baseSlug = slugify(name.split(" ")[0] || "workspace") || "workspace";
