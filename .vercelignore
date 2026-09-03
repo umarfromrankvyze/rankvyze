@@ -1,0 +1,8 @@
+.env
+.env.*
+prisma/dev.db
+prisma/dev.db-journal
+prisma/migrations-sqlite-*
+node_modules
+.next
+.lint.json

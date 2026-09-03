@@ -1,0 +1,709 @@
+// RankVyze — Answer Engine Optimization platform
+//
+// Portability note: this schema deliberately avoids native enums and scalar
+// lists so the exact same file runs on SQLite (local dev / demo) and on
+// PostgreSQL (production). Switching is a one-line change of `provider`
+// below plus a new DATABASE_URL — no model edits required.
+// The union types for every "enum-like" column live in src/lib/enums.ts.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Identity & tenancy
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String  @id @default(cuid())
+  name         String
+  email        String  @unique
+  passwordHash String?
+  image        String?
+  role         String  @default("CUSTOMER") // CUSTOMER | ADMIN
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships      Membership[]
+  sessions         Session[]
+  accounts         Account[]
+  enteredResearch  AIResearchResult[] @relation("ResearchEnteredBy")
+  createdAudits    AEOAudit[]         @relation("AuditCreatedBy")
+  reviewedChanges  CodeChange[]       @relation("CodeChangeReviewedBy")
+  researchSessions ResearchSession[]  @relation("ResearchSessionOwner")
+  refundReviews    RefundRequest[]    @relation("RefundReviewedBy")
+
+  @@index([role])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+/// OAuth identities (Google). Only populated when OAuth is configured.
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  provider          String
+  providerAccountId String
+  accessToken       String?
+  refreshToken      String?
+  expiresAt         Int?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Organization {
+  id   String @id @default(cuid())
+  name String
+  slug String @unique
+
+  plan                  String    @default("TRIAL") // TRIAL | STARTER | GROWTH | SCALE
+  onboardingStep        Int       @default(0)
+  onboardingCompletedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members      Membership[]
+  websites     Website[]
+  reports      Report[]
+  subscription Subscription?
+  orders       Order[]
+  engagements  Engagement[]
+}
+
+model Membership {
+  id             String @id @default(cuid())
+  userId         String
+  organizationId String
+  role           String @default("OWNER") // OWNER | ADMIN | MEMBER
+
+  createdAt DateTime @default(now())
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@index([organizationId])
+}
+
+model Subscription {
+  id             String    @id @default(cuid())
+  organizationId String    @unique
+  plan           String    @default("TRIAL")
+  status         String    @default("TRIALING") // TRIALING | ACTIVE | PAST_DUE | CANCELED
+  seats          Int       @default(1)
+  periodStart    DateTime  @default(now())
+  periodEnd      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+// ---------------------------------------------------------------------------
+// The website — the unit everything else hangs off
+// ---------------------------------------------------------------------------
+
+model Website {
+  id             String @id @default(cuid())
+  organizationId String
+
+  name   String
+  url    String
+  domain String
+
+  industry        String?
+  description     String?
+  targetAudience  String?
+  productsService String?
+  /// JSON array of location strings
+  targetLocations String?
+
+  isPrimary Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization  Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  integrations  Integration[]
+  competitors   Competitor[]
+  prompts       Prompt[]
+  research      AIResearchResult[]
+  sessions      ResearchSession[]
+  citations     Citation[]
+  audits        AEOAudit[]
+  issues        AEOIssue[]
+  optimizations Optimization[]
+  codeChanges   CodeChange[]
+  opportunities ContentOpportunity[]
+  snapshots     VisibilitySnapshot[]
+  reports       Report[]
+  engagements   Engagement[]
+
+  @@index([organizationId])
+  @@index([domain])
+}
+
+model Integration {
+  id        String  @id @default(cuid())
+  websiteId String
+  provider  String // GITHUB | SHOPIFY | WORDPRESS | UPLOAD
+  status    String  @default("NOT_CONNECTED") // NOT_CONNECTED | PENDING | CONNECTED | ERROR
+  label     String?
+  repoUrl   String?
+  /// JSON blob for provider-specific settings
+  config    String?
+
+  connectedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@unique([websiteId, provider])
+  @@index([websiteId])
+}
+
+model Competitor {
+  id        String  @id @default(cuid())
+  websiteId String
+  name      String
+  domain    String
+  url       String?
+  notes     String?
+  isTracked Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  website   Website             @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  mentions  CompetitorMention[]
+  citations Citation[]
+
+  @@unique([websiteId, domain])
+  @@index([websiteId])
+}
+
+// ---------------------------------------------------------------------------
+// AI engines + the manual research pipeline (V1) — API-ready by design
+// ---------------------------------------------------------------------------
+
+/// Engines are rows, not hardcoded constants, so adding one (or swapping the
+/// manual workflow for an API) never requires a schema migration.
+model AIEngine {
+  id       String  @id @default(cuid())
+  key      String  @unique // chatgpt | perplexity | gemini | claude
+  name     String
+  vendor   String
+  color    String
+  sortkey  Int     @default(0)
+  isActive Boolean @default(true)
+
+  research  AIResearchResult[]
+  citations Citation[]
+  snapshots VisibilitySnapshot[]
+}
+
+model Prompt {
+  id        String  @id @default(cuid())
+  websiteId String
+  text      String
+  category  String? // Discovery, Comparison, Local, ...
+  intent    String  @default("COMMERCIAL") // INFORMATIONAL | COMMERCIAL | TRANSACTIONAL | NAVIGATIONAL
+  priority  String  @default("MEDIUM") // HIGH | MEDIUM | LOW
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  website       Website              @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  research      AIResearchResult[]
+  citations     Citation[]
+  opportunities ContentOpportunity[]
+
+  @@index([websiteId])
+}
+
+/// A batch of manual checks an admin runs for one website.
+model ResearchSession {
+  id        String  @id @default(cuid())
+  websiteId String
+  ownerId   String?
+  title     String
+  status    String  @default("IN_PROGRESS") // IN_PROGRESS | COMPLETED | ARCHIVED
+  notes     String?
+
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  website Website            @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  owner   User?              @relation("ResearchSessionOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  results AIResearchResult[]
+
+  @@index([websiteId])
+}
+
+/// One prompt checked against one engine at one point in time.
+/// In V1 an admin fills these in by hand; an API integration would write the
+/// exact same rows, so every downstream metric keeps working unchanged.
+model AIResearchResult {
+  id        String  @id @default(cuid())
+  websiteId String
+  promptId  String
+  engineId  String
+  sessionId String?
+
+  mentioned     Boolean @default(false)
+  position      Int? // 1 = first brand named in the answer
+  cited         Boolean @default(false)
+  citationUrl   String?
+  citedPagePath String?
+  sentiment     String? // POSITIVE | NEUTRAL | NEGATIVE
+  answerSummary String?
+  notes         String?
+  screenshotUrl String?
+
+  source      String   @default("MANUAL") // MANUAL | API
+  checkedAt   DateTime @default(now())
+  enteredById String?
+  createdAt   DateTime @default(now())
+
+  website   Website             @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  prompt    Prompt              @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  engine    AIEngine            @relation(fields: [engineId], references: [id], onDelete: Cascade)
+  session   ResearchSession?    @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  enteredBy User?               @relation("ResearchEnteredBy", fields: [enteredById], references: [id], onDelete: SetNull)
+  citations Citation[]
+  rivals    CompetitorMention[]
+
+  @@index([websiteId, checkedAt])
+  @@index([promptId])
+  @@index([engineId])
+  @@index([websiteId, engineId, checkedAt])
+}
+
+/// Competitors named inside a single AI answer.
+model CompetitorMention {
+  id           String  @id @default(cuid())
+  resultId     String
+  competitorId String?
+  name         String
+  position     Int?
+
+  result     AIResearchResult @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  competitor Competitor?      @relation(fields: [competitorId], references: [id], onDelete: SetNull)
+
+  @@index([resultId])
+  @@index([competitorId])
+}
+
+model Citation {
+  id        String  @id @default(cuid())
+  websiteId String
+  engineId  String
+  promptId  String?
+  resultId  String?
+
+  url          String
+  pageTitle    String?
+  pagePath     String?
+  isOwnDomain  Boolean @default(true)
+  competitorId String?
+
+  occurredAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  website    Website           @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  engine     AIEngine          @relation(fields: [engineId], references: [id], onDelete: Cascade)
+  prompt     Prompt?           @relation(fields: [promptId], references: [id], onDelete: SetNull)
+  result     AIResearchResult? @relation(fields: [resultId], references: [id], onDelete: SetNull)
+  competitor Competitor?       @relation(fields: [competitorId], references: [id], onDelete: SetNull)
+
+  @@index([websiteId, occurredAt])
+  @@index([engineId])
+}
+
+// ---------------------------------------------------------------------------
+// AEO audit, issues, and the fix pipeline
+// ---------------------------------------------------------------------------
+
+model AEOAudit {
+  id        String @id @default(cuid())
+  websiteId String
+
+  overallScore    Int
+  aiUnderstanding Int
+  content         Int
+  structuredData  Int
+  technical       Int
+  entitySignals   Int
+  authority       Int
+
+  summary     String?
+  status      String    @default("PUBLISHED") // DRAFT | PUBLISHED
+  createdById String?
+  createdAt   DateTime  @default(now())
+  publishedAt DateTime?
+
+  website   Website    @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  createdBy User?      @relation("AuditCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  issues    AEOIssue[]
+
+  @@index([websiteId, createdAt])
+}
+
+model AEOIssue {
+  id        String  @id @default(cuid())
+  websiteId String
+  auditId   String?
+
+  title       String
+  category    String // AI_UNDERSTANDING | CONTENT | STRUCTURED_DATA | TECHNICAL | ENTITY | AUTHORITY
+  severity    String @default("HIGH") // CRITICAL | HIGH | MEDIUM | LOW
+  impactScore Float  @default(5)
+
+  description               String
+  whyItMatters              String?
+  currentImplementation     String?
+  recommendedImplementation String?
+  /// JSON array of affected page paths
+  affectedPages             String?
+
+  status     String    @default("OPEN") // OPEN | IN_PROGRESS | FIXED | DISMISSED
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  resolvedAt DateTime?
+
+  website       Website        @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  audit         AEOAudit?      @relation(fields: [auditId], references: [id], onDelete: SetNull)
+  optimizations Optimization[]
+
+  @@index([websiteId, status])
+  @@index([auditId])
+}
+
+model Optimization {
+  id        String  @id @default(cuid())
+  websiteId String
+  issueId   String?
+
+  title       String
+  description String?
+  type        String @default("CONTENT") // CONTENT | SCHEMA | TECHNICAL | INTERNAL_LINKS | ENTITY
+  status      String @default("SUGGESTED") // SUGGESTED | APPROVED | IN_PROGRESS | COMPLETED | REJECTED
+  impactScore Float  @default(5)
+  effort      String @default("MEDIUM") // LOW | MEDIUM | HIGH
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  completedAt DateTime?
+
+  website     Website      @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  issue       AEOIssue?    @relation(fields: [issueId], references: [id], onDelete: SetNull)
+  codeChanges CodeChange[]
+
+  @@index([websiteId, status])
+}
+
+/// An implementation job. V1 is a human review workflow over authored diffs;
+/// the columns below are exactly what an agent run would need to fill in, so
+/// wiring Claude Code to it later is an integration, not a migration.
+model CodeChange {
+  id             String  @id @default(cuid())
+  websiteId      String
+  optimizationId String?
+
+  number  Int
+  title   String
+  summary String?
+
+  repository String?
+  branch     String?
+  /// Task text handed to the implementing agent
+  instructions String?
+  /// JSON blob: page URLs, audit context, constraints
+  contextJson  String?
+
+  status String  @default("DRAFT") // DRAFT | READY_FOR_CLAUDE | GENERATING | AWAITING_REVIEW | APPROVED | REJECTED | MERGED
+  prUrl  String?
+
+  additions Int @default(0)
+  deletions Int @default(0)
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  reviewedAt   DateTime?
+  reviewedById String?
+
+  website      Website          @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  optimization Optimization?    @relation(fields: [optimizationId], references: [id], onDelete: SetNull)
+  reviewedBy   User?            @relation("CodeChangeReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+  files        CodeChangeFile[]
+
+  @@unique([websiteId, number])
+  @@index([websiteId, status])
+}
+
+model CodeChangeFile {
+  id           String @id @default(cuid())
+  codeChangeId String
+
+  path      String
+  language  String @default("tsx")
+  diff      String
+  additions Int    @default(0)
+  deletions Int    @default(0)
+
+  codeChange CodeChange @relation(fields: [codeChangeId], references: [id], onDelete: Cascade)
+
+  @@index([codeChangeId])
+}
+
+model ContentOpportunity {
+  id        String  @id @default(cuid())
+  websiteId String
+  promptId  String?
+
+  title         String
+  targetPrompt  String?
+  potential     String @default("MEDIUM") // HIGH | MEDIUM | LOW
+  intent        String @default("COMMERCIAL")
+  contentType   String @default("COMPARISON") // COMPARISON | GUIDE | LISTICLE | FAQ | CASE_STUDY | LANDING_PAGE
+  status        String @default("IDEA") // IDEA | PLANNED | IN_PROGRESS | PUBLISHED
+  briefing      String?
+  estimatedLift Float  @default(0)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  publishedAt DateTime?
+
+  website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  prompt  Prompt? @relation(fields: [promptId], references: [id], onDelete: SetNull)
+
+  @@index([websiteId, status])
+}
+
+/// Point-in-time rollups so trend charts stay cheap as research volume grows.
+model VisibilitySnapshot {
+  id        String  @id @default(cuid())
+  websiteId String
+  engineId  String?
+
+  capturedOn      DateTime
+  visibilityScore Float
+  mentionRate     Float
+  citationRate    Float
+  avgPosition     Float?
+  promptsChecked  Int      @default(0)
+
+  createdAt DateTime @default(now())
+
+  website Website   @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  engine  AIEngine? @relation(fields: [engineId], references: [id], onDelete: Cascade)
+
+  @@unique([websiteId, engineId, capturedOn])
+  @@index([websiteId, capturedOn])
+}
+
+model Report {
+  id             String @id @default(cuid())
+  organizationId String
+  websiteId      String
+
+  title       String
+  periodStart DateTime
+  periodEnd   DateTime
+  status      String   @default("READY") // GENERATING | READY | FAILED
+  /// Frozen snapshot of every metric at generation time
+  dataJson    String
+
+  createdAt DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  website      Website      @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@index([websiteId, createdAt])
+}
+
+/// Short-lived tokens for password reset (and future email verification).
+model VerificationToken {
+  id         String   @id @default(cuid())
+  identifier String
+  token      String   @unique
+  type       String   @default("PASSWORD_RESET")
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([identifier, type])
+}
+
+/// Messages from the public contact form.
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  company   String?
+  message   String
+  createdAt DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Commerce: one-time $99 purchase + the 45-day visibility guarantee
+// ---------------------------------------------------------------------------
+
+/// A free, pre-purchase technical scan of a URL. No AI engines are involved —
+/// these are objective checks on the fetched HTML (schema, rendering, crawler
+/// policy) that we can run ourselves. It is the top of the funnel.
+model ScanRequest {
+  id     String @id @default(cuid())
+  url    String
+  domain String
+  email  String?
+
+  /// Weighted 0-100 across the checks below
+  score      Int
+  /// JSON array of { key, label, status, detail, weight }
+  resultJson String
+
+  ipHash    String?
+  userAgent String?
+
+  convertedOrderId String?
+  createdAt        DateTime @default(now())
+
+  @@index([domain, createdAt])
+}
+
+/// A payment. One order = one 45-day engagement.
+model Order {
+  id             String @id @default(cuid())
+  organizationId String
+
+  /// Minor units (cents) so no floating point ever touches money
+  amount   Int    @default(9900)
+  currency String @default("USD")
+
+  status String @default("PENDING") // PENDING | PAID | FAILED | REFUNDED | CANCELED
+
+  provider          String  @default("dodo")
+  providerCheckoutId String?
+  providerPaymentId  String?
+  providerCustomerId String?
+
+  email       String?
+  scanId      String?
+
+  paidAt       DateTime?
+  refundedAt   DateTime?
+  refundId     String?
+  refundAmount Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  engagement   Engagement?
+
+  @@index([organizationId, createdAt])
+  @@index([providerCheckoutId])
+  @@index([status])
+}
+
+/// The 45-day guaranteed sprint bought by an Order.
+///
+/// The guarantee is met when the brand is mentioned on at least
+/// GUARANTEE_MIN_ENGINES distinct engines, within the window, on prompts from
+/// the set locked at day 0. Evaluation lives in src/lib/guarantee.ts and reads
+/// AIResearchResult rows — the same source as every other metric.
+model Engagement {
+  id             String @id @default(cuid())
+  organizationId String
+  websiteId      String?
+  orderId        String @unique
+
+  status String @default("PENDING_PAYMENT")
+  // PENDING_PAYMENT | ACTIVE | MET | ELIGIBLE | REFUND_REQUESTED | REFUNDED | DENIED | VOID
+
+  startsAt DateTime?
+  endsAt   DateTime?
+
+  /// Prompt ids frozen at day 0 — the guarantee is judged only on these
+  lockedPromptsJson String?
+
+  baselineSessionId String?
+  finalSessionId    String?
+
+  metAt              DateTime?
+  metEngineCount     Int       @default(0)
+  metEvidenceJson    String?
+  evaluatedAt        DateTime?
+
+  /// Set when a void condition applies (see VOID_REASONS in src/lib/guarantee.ts)
+  voidReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  website       Website?       @relation(fields: [websiteId], references: [id], onDelete: SetNull)
+  order         Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  refundRequest RefundRequest?
+
+  @@index([status, endsAt])
+  @@index([organizationId])
+}
+
+model RefundRequest {
+  id           String @id @default(cuid())
+  engagementId String @unique
+
+  reason      String?
+  status      String  @default("PENDING") // PENDING | APPROVED | DENIED
+  decisionNote String?
+
+  requestedAt  DateTime  @default(now())
+  reviewedAt   DateTime?
+  reviewedById String?
+
+  engagement Engagement @relation(fields: [engagementId], references: [id], onDelete: Cascade)
+  reviewedBy User?      @relation("RefundReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([status, requestedAt])
+}
+
+/// Raw provider webhooks. `eventId` is unique so redelivery is a no-op.
+model WebhookEvent {
+  id         String   @id @default(cuid())
+  provider   String   @default("dodo")
+  eventId    String
+  type       String
+  payload    String
+  error      String?
+  receivedAt DateTime @default(now())
+  processedAt DateTime?
+
+  @@unique([provider, eventId])
+  @@index([type, receivedAt])
+}
