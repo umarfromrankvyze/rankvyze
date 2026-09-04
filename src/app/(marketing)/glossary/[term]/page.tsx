@@ -73,7 +73,7 @@ export default async function GlossaryTermPage({ params }: { params: Promise<{ t
         <div className="mx-auto max-w-2xl">
           <Link
             href="/glossary"
-            className="inline-flex items-center gap-1.5 text-[13px] font-medium text-ink-muted hover:text-ink"
+            className="inline-flex items-center gap-1.5 text-[13px] font-medium text-ink-muted hover:text-ink pointer-coarse:min-h-11"
           >
             <ArrowLeft className="size-3.5" /> Glossary
           </Link>
@@ -113,7 +113,7 @@ export default async function GlossaryTermPage({ params }: { params: Promise<{ t
                   <Link
                     key={r.slug}
                     href={`/glossary/${r.slug}`}
-                    className="rounded-full border border-line bg-white px-3.5 py-1.5 text-[13.5px] text-ink-muted transition-colors hover:border-ink/25 hover:text-ink"
+                    className="inline-flex items-center rounded-full border border-line bg-white px-3.5 py-1.5 text-[13.5px] text-ink-muted transition-colors hover:border-ink/25 hover:text-ink pointer-coarse:min-h-11"
                   >
                     {r.term}
                   </Link>

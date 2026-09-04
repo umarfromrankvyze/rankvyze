@@ -222,7 +222,7 @@ export default async function IndustryPage({ params }: { params: Promise<{ indus
               <Link
                 key={o.slug}
                 href={`/answer-engine-optimization/${o.slug}`}
-                className="rounded-full border border-line bg-white px-4 py-2 text-[13.5px] text-ink-muted transition-colors hover:border-ink/25 hover:text-ink"
+                className="inline-flex items-center rounded-full border border-line bg-white px-4 py-2 text-[13.5px] text-ink-muted transition-colors hover:border-ink/25 hover:text-ink pointer-coarse:min-h-11"
               >
                 {o.name.charAt(0).toUpperCase() + o.name.slice(1)}
               </Link>

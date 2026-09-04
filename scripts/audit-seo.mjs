@@ -13,6 +13,11 @@ const BASE = (process.argv[2] ?? "https://rankvyze.com").replace(/\/$/, "");
 const PAGES = [
   "/",
   "/pricing",
+  "/tools",
+  "/tools/ai-visibility-checker",
+  "/rank-in/chatgpt",
+  "/glossary/answer-engine-optimization",
+  "/answer-engine-optimization/saas",
   "/answer-engine-optimization",
   "/blog/what-answer-engine-optimization-costs",
   "/guarantee",

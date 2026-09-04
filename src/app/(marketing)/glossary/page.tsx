@@ -72,7 +72,7 @@ export default function GlossaryPage() {
               <Reveal key={t.slug} delay={(i % 2) * 50}>
                 <Link
                   href={`/glossary/${t.slug}`}
-                  className="group block h-full rounded-2xl border border-line bg-white p-6 transition-all hover:-translate-y-0.5 hover:shadow-lift"
+                  className="group block h-full rounded-2xl border border-line bg-white p-6 transition-all hover:-translate-y-0.5 hover:shadow-lift pointer-coarse:min-h-11"
                 >
                   <dt className="font-display text-[17px] font-bold tracking-tight text-ink group-hover:text-brand-600">
                     {t.term}

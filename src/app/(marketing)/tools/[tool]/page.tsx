@@ -85,7 +85,14 @@ export default async function ToolPage({ params }: { params: Promise<{ tool: str
 
             <div className="mt-9">
               <ToolRunner
-                slug={tool.slug as "ai-crawler-checker" | "schema-markup-checker" | "meta-tag-checker" | "domain-age-checker"}
+                slug={
+                  tool.slug as
+                    | "ai-visibility-checker"
+                    | "ai-crawler-checker"
+                    | "schema-markup-checker"
+                    | "meta-tag-checker"
+                    | "domain-age-checker"
+                }
                 placeholder={tool.placeholder}
                 action={tool.action}
               />

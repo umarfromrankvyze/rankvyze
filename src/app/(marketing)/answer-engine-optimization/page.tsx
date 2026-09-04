@@ -236,7 +236,7 @@ export default function AnswerEngineOptimizationPage() {
                   <Link
                     key={industry.slug}
                     href={`/answer-engine-optimization/${industry.slug}`}
-                    className="rounded-full border border-line bg-white px-4 py-2 text-[13.5px] text-ink-muted transition-colors hover:border-ink/25 hover:text-ink"
+                    className="inline-flex items-center rounded-full border border-line bg-white px-4 py-2 text-[13.5px] text-ink-muted transition-colors hover:border-ink/25 hover:text-ink pointer-coarse:min-h-11"
                   >
                     {industry.name.charAt(0).toUpperCase() + industry.name.slice(1)}
                   </Link>
@@ -264,7 +264,7 @@ export default function AnswerEngineOptimizationPage() {
               </ul>
               <Link
                 href="/glossary"
-                className="mt-4 inline-flex items-center gap-1.5 text-[13.5px] font-medium text-ink-muted hover:text-ink"
+                className="mt-4 inline-flex items-center gap-1.5 text-[13.5px] font-medium text-ink-muted hover:text-ink pointer-coarse:min-h-11"
               >
                 Glossary of AI search terms <ArrowRight className="size-3.5" />
               </Link>

@@ -4,6 +4,7 @@ import { checkCrawlers, type CrawlerReport } from "@/lib/tools/crawlers";
 import { checkDomainAge, type DomainAgeReport } from "@/lib/tools/domain-age";
 import { checkMeta, type MetaReport } from "@/lib/tools/meta";
 import { checkSchema, type SchemaReport } from "@/lib/tools/schema";
+import { checkVisibility, type VisibilityReport } from "@/lib/tools/visibility";
 import { ToolError } from "@/lib/tools/http";
 import { fail, succeed, type ActionResult } from "@/server/types";
 
@@ -16,7 +17,7 @@ import { fail, succeed, type ActionResult } from "@/server/types";
  * generically, so an internal failure can't leak a stack trace into the page.
  */
 
-export type ToolReport = CrawlerReport | SchemaReport | MetaReport | DomainAgeReport;
+export type ToolReport = CrawlerReport | SchemaReport | MetaReport | DomainAgeReport | VisibilityReport;
 
 async function run<T>(work: () => Promise<T>): Promise<ActionResult<T>> {
   try {
@@ -42,6 +43,10 @@ export async function runSchemaCheck(_prev: ActionResult<SchemaReport>, formData
 
 export async function runMetaCheck(_prev: ActionResult<MetaReport>, formData: FormData) {
   return run(() => checkMeta(inputFrom(formData)));
+}
+
+export async function runVisibilityCheck(_prev: ActionResult<VisibilityReport>, formData: FormData) {
+  return run(() => checkVisibility(inputFrom(formData)));
 }
 
 export async function runDomainAgeCheck(_prev: ActionResult<DomainAgeReport>, formData: FormData) {

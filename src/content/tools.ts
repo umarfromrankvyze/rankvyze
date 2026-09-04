@@ -40,6 +40,53 @@ export interface ToolDef {
 
 export const TOOLS: ToolDef[] = [
   {
+    slug: "ai-visibility-checker",
+    name: "AI Visibility Checker",
+    heading: "Are you ready to be recommended by AI engines?",
+    seoTitle: "Free AI Visibility Checker",
+    description:
+      "See whether ChatGPT, Perplexity, Gemini and Claude can identify, reach and read your business — and get the exact buyer questions to test yourself.",
+    blurb:
+      "Works out what an engine can tell about your business, scores readiness across five signals, and generates the prompts to test.",
+    placeholder: "yoursite.com",
+    action: "Check visibility",
+    bullets: [
+      "The sentence an engine can form about you — or the fact that it can't",
+      "Readiness across identity, reachability, readability, structured facts and corroboration",
+      "Buyer questions built from your business, ready to paste into each engine",
+    ],
+    targets: [
+      "ai visibility checker",
+      "check ai visibility free",
+      "does chatgpt know my business",
+      "ai search visibility tool",
+      "am i visible in ai search",
+    ],
+    faq: [
+      {
+        q: "Does this actually ask ChatGPT about my business?",
+        a: "No, and it says so on the results. Querying the engines needs paid API keys and costs money per check, so no free tool can honestly claim to do it. This computes the half that can be measured from your site, then hands you the exact prompts to run yourself in a signed-out session.",
+      },
+      {
+        q: "What is a readiness score?",
+        a: "A weighted score across the five signals that decide whether an engine *can* recommend you: whether it can tell what you are, reach you, read you without JavaScript, find structured facts, and see independent corroboration. It is not a measurement of whether you are currently mentioned.",
+      },
+      {
+        q: "Why does it generate prompts instead of just answering?",
+        a: "Because the prompt set is the measurement, and a generic list measures a category you may not compete in. These are built from what your own page says the business is, which is also why an unclear result on identity matters — if we can't build the question, an engine can't either.",
+      },
+      {
+        q: "How do I test the prompts properly?",
+        a: "Signed out, in a private window, one fresh conversation per question. Signed in, ChatGPT personalises from your history — including every previous time you discussed your own company — and will mention you to you and nobody else.",
+      },
+      {
+        q: "What does a low readiness score actually mean?",
+        a: "That engines currently lack what they need to name you, regardless of how good the business is. The fixes are mechanical and mostly cheap: state your category plainly, unblock the crawlers, render content server-side, add Organization schema.",
+      },
+    ],
+    related: ["ai-crawler-checker", "schema-markup-checker"],
+  },
+  {
     slug: "ai-crawler-checker",
     name: "AI Crawler Checker",
     heading: "Can AI crawlers actually reach your site?",
