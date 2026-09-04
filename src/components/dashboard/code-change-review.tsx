@@ -5,9 +5,22 @@ import { Check, ExternalLink, GitPullRequest, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { createPullRequest, reviewCodeChange } from "@/server/actions/workspace";
+import { deliverChange, reviewCodeChange } from "@/server/actions/workspace";
 
-export function CodeChangeReview({ websiteId, id, status, prUrl, githubConnected }: { websiteId: string; id: string; status: string; prUrl: string | null; githubConnected: boolean }) {
+export function CodeChangeReview({
+  websiteId,
+  id,
+  status,
+  prUrl,
+  connectedRoute,
+}: {
+  websiteId: string;
+  id: string;
+  status: string;
+  prUrl: string | null;
+  /** The connected API route's name, or null when there isn't one. */
+  connectedRoute: string | null;
+}) {
   const [pending, start] = useTransition();
   const [confirmReject, setConfirmReject] = useState(false);
 
@@ -20,9 +33,9 @@ export function CodeChangeReview({ websiteId, id, status, prUrl, githubConnected
 
   const pr = () =>
     start(async () => {
-      const r = await createPullRequest(websiteId, id);
+      const r = await deliverChange(websiteId, id);
       if (!r.ok) return void toast.error(r.error);
-      toast.success(r.message, { description: r.data?.prUrl ?? undefined });
+      toast.success(r.message, { description: r.data?.reviewUrl ?? undefined });
     });
 
   return (
@@ -38,14 +51,19 @@ export function CodeChangeReview({ websiteId, id, status, prUrl, githubConnected
         </>
       )}
       {status === "APPROVED" && (
-        <Button onClick={pr} loading={pending} title={githubConnected ? undefined : "Connect GitHub in Settings first"}>
-          <GitPullRequest /> Create Pull Request
+        <Button
+          onClick={pr}
+          loading={pending}
+          disabled={!connectedRoute}
+          title={connectedRoute ? `Delivered via ${connectedRoute}` : "Connect a delivery route in Settings first"}
+        >
+          <GitPullRequest /> {connectedRoute ? "Deliver this change" : "No delivery route connected"}
         </Button>
       )}
       {prUrl && (
         <Button variant="outline" asChild>
           <a href={prUrl} target="_blank" rel="noreferrer">
-            <ExternalLink /> View pull request
+            <ExternalLink /> View the change
           </a>
         </Button>
       )}

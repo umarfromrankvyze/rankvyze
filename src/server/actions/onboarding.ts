@@ -160,6 +160,16 @@ export async function saveIntegrationStep(input: {
   // for every provider in the enum, which made "not connected" and "never
   // offered" indistinguishable in the admin.
   if (provider && mode) {
+    const existing = await db.integration.findUnique({
+      where: { websiteId_provider: { websiteId: website.id, provider } },
+      select: { status: true },
+    });
+    // An API route may already have been connected and live-verified by the
+    // connect form on this very screen. Writing PENDING over that would throw
+    // away a working credential's status and show "awaiting setup" for a
+    // connection we have literally just proved works.
+    const keepConnected = existing?.status === "CONNECTED";
+
     await db.integration.upsert({
       where: { websiteId_provider: { websiteId: website.id, provider } },
       create: {
@@ -171,7 +181,12 @@ export async function saveIntegrationStep(input: {
         accessNote: accessNote || null,
         label: repoUrl ? repoUrl.replace(/^https?:\/\/(www\.)?(github|gitlab)\.com\//, "") : null,
       },
-      update: { mode, status: "PENDING", repoUrl: repoUrl || null, accessNote: accessNote || null },
+      update: {
+        mode,
+        ...(keepConnected ? {} : { status: "PENDING" }),
+        ...(repoUrl ? { repoUrl } : {}),
+        accessNote: accessNote || null,
+      },
     });
     // Only one route is live at a time; anything previously chosen goes back
     // to not-connected rather than lingering as a second pending promise.

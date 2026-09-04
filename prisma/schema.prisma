@@ -190,9 +190,18 @@ model Integration {
   repoUrl    String?
   /// JSON blob for provider-specific settings
   config     String?
-  /// What the customer told us about access — never a credential. Secrets are
-  /// handed over out of band; this column must stay safe to read in the admin.
+  /// What the customer told us about access — free text, never a credential.
   accessNote String?
+
+  /// The credential for an API-mode route, encrypted with AES-256-GCM by
+  /// src/lib/crypto.ts. The key lives only in the environment, so a database
+  /// dump on its own is not write access to a customer's site.
+  secretCiphertext String?
+  /// A few characters of the credential so the customer can tell which one is
+  /// stored. Never enough to reconstruct it.
+  secretHint       String?
+  /// Why the last verify or write failed, shown in Settings and the admin.
+  lastError        String?
 
   connectedAt DateTime?
   /// Last time we confirmed this route can actually deliver a change.
@@ -493,6 +502,10 @@ model CodeChangeFile {
   path      String
   language  String @default("tsx")
   diff      String
+  /// The complete file body after the change. The diff is for humans reading
+  /// the review; this is what actually gets written to the customer's site,
+  /// and a change without it cannot be delivered.
+  content   String?
   additions Int    @default(0)
   deletions Int    @default(0)
 

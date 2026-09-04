@@ -16,7 +16,8 @@ import {
   saveIntegrationStep,
   saveWebsiteStep,
 } from "@/server/actions/onboarding";
-import { DeliveryStep, type DeliveryChoice } from "@/components/onboarding/delivery-step";
+import { DeliveryStep, type DeliveryChoice, type DeliveryConnection } from "@/components/onboarding/delivery-step";
+import { recommendedRoute } from "@/content/platforms";
 import type { PlatformKey } from "@/lib/enums";
 import type { FieldErrors } from "@/lib/validation";
 
@@ -60,6 +61,8 @@ export interface OnboardingInitial {
   platformSignals: string[];
   detectedPlatform: PlatformKey | null;
   integration: { provider: string; mode: string; repoUrl: string; accessNote: string } | null;
+  /** The stored integration row, so an already-verified credential shows as connected. */
+  connection: DeliveryConnection | null;
 }
 
 export function OnboardingWizard({ initial }: { initial: OnboardingInitial }) {
@@ -82,8 +85,10 @@ export function OnboardingWizard({ initial }: { initial: OnboardingInitial }) {
   );
   const [delivery, setDelivery] = useState<DeliveryChoice>({
     platform: initial.platform,
-    provider: initial.integration?.provider ?? null,
-    mode: initial.integration?.mode ?? null,
+    // Open on the recommended route unless they already chose one, so the
+    // connect form is in front of them rather than one click away.
+    provider: initial.integration?.provider ?? recommendedRoute(initial.platform)?.provider ?? null,
+    mode: initial.integration?.mode ?? recommendedRoute(initial.platform)?.mode ?? null,
     repoUrl: initial.integration?.repoUrl ?? "",
     accessNote: initial.integration?.accessNote ?? "",
   });
@@ -255,6 +260,7 @@ export function OnboardingWizard({ initial }: { initial: OnboardingInitial }) {
               detectedConfidence={initial.platformConfidence}
               detectedSignals={initial.platformSignals}
               detectedPlatform={initial.detectedPlatform}
+              connection={initial.connection}
             />
           )}
         </div>

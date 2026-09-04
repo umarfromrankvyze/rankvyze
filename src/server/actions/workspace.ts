@@ -14,6 +14,7 @@ import {
   websiteSettingsSchema,
 } from "@/lib/validation";
 import { assertWebsiteAccess, buildReportSnapshot, WEBSITE_COOKIE } from "@/server/queries";
+import { applyChange } from "@/lib/delivery";
 import { fail, succeed, type ActionResult } from "@/server/types";
 import type { CodeChangeStatus, ContentStatus, IssueStatus, OptimizationStatus } from "@/lib/enums";
 
@@ -212,33 +213,52 @@ export async function reviewCodeChange(websiteId: string, id: string, decision: 
 }
 
 /**
- * Pull request creation. There is no GitHub App installed in V1, so this
- * records the intent and moves the job to MERGED-pending state with a
- * placeholder PR URL only when a repository is connected. The UI explains
- * exactly what happened.
+ * Ship an approved change through whichever API route the site has connected.
+ *
+ * This used to synthesise a plausible-looking pull request URL from the change
+ * number and mark the job merged, which meant the dashboard showed a link that
+ * went nowhere. It now calls the provider's API for real and reports exactly
+ * what came back — including the failures.
  */
-export async function createPullRequest(websiteId: string, id: string): Promise<ActionResult<{ prUrl: string | null }>> {
+export async function deliverChange(websiteId: string, id: string): Promise<ActionResult<{ reviewUrl: string | null }>> {
   await ctx(websiteId);
-  const change = await db.codeChange.findFirst({
-    where: { id, websiteId },
-    include: { website: { include: { integrations: { where: { provider: "GITHUB" } } } } },
-  });
+  const change = await db.codeChange.findFirst({ where: { id, websiteId }, include: { files: true } });
   if (!change) return fail("Code change not found.");
-  if (change.status !== "APPROVED") return fail("Approve the change before creating a pull request.");
+  if (change.status !== "APPROVED") return fail("Approve the change before delivering it.");
 
-  const github = change.website.integrations[0];
-  if (!github || github.status !== "CONNECTED") {
-    return fail("Connect a GitHub repository in Settings → Connections to create pull requests.");
+  const files = change.files.filter((f) => f.content !== null && f.content !== "");
+  if (change.files.length > 0 && files.length === 0) {
+    // Better an honest refusal than writing a diff to someone's repository as
+    // though it were the file.
+    return fail("This change has no final file content yet, so there is nothing to write. It needs to be generated first.");
   }
 
-  // Integration boundary: replace with a real GitHub API call.
-  const prUrl = `${github.repoUrl?.replace(/\/$/, "") ?? "https://github.com/" + github.label}/pull/${change.number + 120}`;
-  await db.codeChange.update({ where: { id }, data: { prUrl, status: "MERGED" } });
-  if (change.optimizationId) {
-    await db.optimization.update({ where: { id: change.optimizationId }, data: { status: "COMPLETED", completedAt: new Date() } });
+  const result = await applyChange(websiteId, {
+    title: change.title,
+    summary: change.summary ?? "",
+    files: files.map((f) => ({ path: f.path, content: f.content! })),
+  });
+
+  if (!result.ok) return fail(result.error ?? result.detail);
+
+  await db.codeChange.update({
+    where: { id },
+    data: {
+      prUrl: result.reviewUrl ?? null,
+      // "MERGED" would be a claim about the customer's repository that we are
+      // in no position to make — we open the pull request, they merge it.
+      status: result.live ? "MERGED" : "APPROVED",
+    },
+  });
+  if (change.optimizationId && result.live) {
+    await db.optimization.update({
+      where: { id: change.optimizationId },
+      data: { status: "COMPLETED", completedAt: new Date() },
+    });
   }
+
   revalidateDashboard();
-  return succeed({ prUrl }, "Pull request recorded. Your team can merge it from GitHub.");
+  return succeed({ reviewUrl: result.reviewUrl ?? null }, result.detail);
 }
 
 export async function setCodeChangeStatus(websiteId: string, id: string, status: CodeChangeStatus): Promise<ActionResult> {

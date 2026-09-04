@@ -48,7 +48,7 @@ const GUIDED_ROUTE = (platformName: string, where: string): DeliveryRoute => ({
   provider: "GUIDED",
   mode: "GUIDED",
   title: "Guided change pack",
-  summary: "We write the exact change, you paste it in. No access needed.",
+  summary: "Fallback: we write the exact change, you paste it in. No access needed.",
   weNeed: ["Nothing. You keep full control of your site."],
   howItWorks: [
     `We produce the exact code and copy for each fix, with the ${where} it belongs in ${platformName}.`,
@@ -56,6 +56,7 @@ const GUIDED_ROUTE = (platformName: string, where: string): DeliveryRoute => ({
     "We re-fetch the live page and verify the signal is actually there. If it isn't, we tell you what's still missing.",
   ],
   limits: [
+    "This is the one route that needs work from you on every single fix. If you'd rather not do that, use the route above.",
     "Nothing lands until you apply it, so the clock depends on your turnaround.",
     "We can verify the result but we cannot fix a mis-paste for you.",
   ],
@@ -68,7 +69,9 @@ const EDITOR_ROUTE = (
   roleName: string,
   steps: string[],
   limits: string[],
+  recommended = false,
 ): DeliveryRoute => ({
+  recommended,
   // Named after the platform rather than filed under GUIDED, so an admin
   // reading "Wix · we implement in your editor" knows which login to go find.
   provider,
@@ -169,12 +172,13 @@ export const PLATFORM_PLAYBOOKS: PlatformPlaybook[] = [
         ],
         howItWorks: [
           "We connect over the WordPress REST API using the application password — your actual password is never involved.",
-          "Each approved fix is applied to a draft revision first, so you see the change before it publishes.",
-          "You approve in your dashboard, we publish, and WordPress keeps the revision history so anything can be rolled back.",
+          "You approve each fix in your dashboard before we touch anything.",
+          "We capture the current content, apply the change, and store the previous version. WordPress publishes edits immediately, so a change is live as soon as you approve it — and one click puts it back.",
           "We re-fetch the live URL and verify the signal is present.",
         ],
         limits: [
-          "Application passwords are disabled on some managed hosts; if yours blocks them, we fall back to the guided route.",
+          "WordPress has no review-before-publish step for an already published page, so an approved change goes live at once. The rollback is one click, but it is a rollback, not a preview.",
+          "Application passwords are disabled on some managed hosts. If yours blocks them, we use an editor login instead.",
           "Content locked inside a page builder's own storage may need you to edit it in that builder.",
         ],
         turnaround: "Same day once approved",
@@ -329,12 +333,9 @@ export const PLATFORM_PLAYBOOKS: PlatformPlaybook[] = [
           "Framer has no per-change permission model, so an Editor invite gives broad project access. Use a duplicate project first if that concerns you.",
           "Publishing stays with you, so live timing is yours.",
         ],
+        true,
       ),
-      {
-        ...GUIDED_ROUTE("Framer", "panel and field"),
-        recommended: true,
-        summary: "We write the exact snippets and where they go. Most Framer customers pick this.",
-      },
+      GUIDED_ROUTE("Framer", "panel and field"),
     ],
   },
   {
@@ -366,8 +367,9 @@ export const PLATFORM_PLAYBOOKS: PlatformPlaybook[] = [
           "Contributor roles on Wix are coarse; Website Manager is the tightest fit but still broad.",
           "Publishing stays with you.",
         ],
+        true,
       ),
-      { ...GUIDED_ROUTE("Wix", "panel and field"), recommended: true },
+      GUIDED_ROUTE("Wix", "panel and field"),
     ],
   },
   {
@@ -395,8 +397,9 @@ export const PLATFORM_PLAYBOOKS: PlatformPlaybook[] = [
           "We apply the approved changes; you publish.",
         ],
         ["Contributor permissions do not cover Code Injection on every plan — Administrator does.", "Publishing stays with you."],
+        true,
       ),
-      { ...GUIDED_ROUTE("Squarespace", "panel and field"), recommended: true },
+      GUIDED_ROUTE("Squarespace", "panel and field"),
     ],
   },
   {
@@ -418,8 +421,9 @@ export const PLATFORM_PLAYBOOKS: PlatformPlaybook[] = [
         "editor-level collaborator",
         ["We apply each approved change in your builder's editor.", "You keep publishing rights."],
         ["Depends entirely on what your builder's permission model allows."],
+        true,
       ),
-      { ...GUIDED_ROUTE("your site builder", "screen and field"), recommended: true },
+      GUIDED_ROUTE("your site builder", "screen and field"),
     ],
   },
   {
@@ -430,14 +434,15 @@ export const PLATFORM_PLAYBOOKS: PlatformPlaybook[] = [
     weCanChange: ["Confirmed with you during setup, before the sprint clock starts."],
     hardLimits: ["Unknown until we've looked. We will not guess in writing."],
     routes: [
-      { ...GUIDED_ROUTE("your site", "location"), recommended: true },
       EDITOR_ROUTE(
         "GUIDED",
         "your site",
         "editor-level collaborator",
         ["We apply each approved change wherever your site is managed."],
         ["Depends on what your setup allows."],
+        true,
       ),
+      GUIDED_ROUTE("your site", "location"),
     ],
   },
 ];
@@ -450,6 +455,17 @@ export function getPlaybook(key: PlatformKey): PlatformPlaybook {
 
 export function platformName(key: string): string {
   return PLATFORM_BY_KEY.get(key as PlatformKey)?.name ?? "Something else";
+}
+
+/**
+ * The route we open on. Pre-selecting it means the connect form is visible
+ * without a click, which matters: the recommended route is the one that needs
+ * no work from the customer per fix, and burying it behind an extra
+ * interaction nudges people toward the one that does.
+ */
+export function recommendedRoute(platform: PlatformKey): DeliveryRoute | undefined {
+  const routes = getPlaybook(platform).routes;
+  return routes.find((r) => r.recommended) ?? routes[0];
 }
 
 /** Route lookup for a saved integration row. */

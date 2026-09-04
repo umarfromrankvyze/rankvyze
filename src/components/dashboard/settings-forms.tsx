@@ -8,7 +8,8 @@ import { Field } from "@/components/ui/field";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { changePassword, updateProfile, updateWebsiteSettings } from "@/server/actions/workspace";
 import { confirmPlatform, saveIntegrationStep } from "@/server/actions/onboarding";
-import { DeliveryStep, type DeliveryChoice } from "@/components/onboarding/delivery-step";
+import { DeliveryStep, type DeliveryChoice, type DeliveryConnection } from "@/components/onboarding/delivery-step";
+import { recommendedRoute } from "@/content/platforms";
 import type { PlatformKey } from "@/lib/enums";
 import type { FieldErrors } from "@/lib/validation";
 
@@ -157,17 +158,19 @@ export function ConnectionsPanel({
   platformConfidence,
   platformSignals,
   chosen,
+  connection,
 }: {
   platform: PlatformKey;
   platformConfidence: number | null;
   platformSignals: string[];
   chosen: { provider: string; mode: string; repoUrl: string; accessNote: string } | null;
+  connection: DeliveryConnection | null;
 }) {
   const [pending, start] = useTransition();
   const [value, setValue] = useState<DeliveryChoice>({
     platform,
-    provider: chosen?.provider ?? null,
-    mode: chosen?.mode ?? null,
+    provider: chosen?.provider ?? recommendedRoute(platform)?.provider ?? null,
+    mode: chosen?.mode ?? recommendedRoute(platform)?.mode ?? null,
     repoUrl: chosen?.repoUrl ?? "",
     accessNote: chosen?.accessNote ?? "",
   });
@@ -203,6 +206,7 @@ export function ConnectionsPanel({
         detectedConfidence={platformConfidence}
         detectedSignals={platformSignals}
         detectedPlatform={platform}
+        connection={connection}
       />
       <div className="flex items-center gap-3 border-t border-line pt-5">
         <Button onClick={save} loading={pending} disabled={!dirty}>

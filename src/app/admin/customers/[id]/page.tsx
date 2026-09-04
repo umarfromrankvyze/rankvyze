@@ -231,6 +231,19 @@ export default async function AdminCustomerPage({ params }: { params: Promise<{ 
                             </ul>
                           </div>
                         )}
+                        {i.mode === "API" && (
+                          <p className="mt-2 text-[11.5px] text-ink-faint">
+                            {i.secretCiphertext
+                              ? `Credential held ${i.secretHint ?? ""} · last verified ${i.verifiedAt ? formatRelative(i.verifiedAt) : "never"}`
+                              : "No credential stored yet — the customer hasn't connected."}
+                          </p>
+                        )}
+                        {i.lastError && (
+                          <p className="mt-2 rounded border border-danger/25 bg-danger-soft p-2 text-[11.5px] leading-relaxed text-ink">
+                            <span className="font-semibold">Last failure: </span>
+                            {i.lastError}
+                          </p>
+                        )}
                         {i.accessNote && (
                           <p className="mt-2 rounded border border-line bg-surface-2 p-2 text-[11.5px] leading-relaxed text-ink">
                             <span className="font-semibold">Customer note: </span>

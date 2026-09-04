@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Clock, GitBranch } from "lucide-react";
 import { dashboardContext } from "@/server/context";
 import { getCodeChange, getIntegrations } from "@/server/queries";
+import { findRoute } from "@/content/platforms";
+import type { PlatformKey } from "@/lib/enums";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CodeDiff } from "@/components/dashboard/code-diff";
@@ -27,7 +29,11 @@ export default async function CodeChangeDetailPage({ params }: { params: Promise
   const { id } = await params;
   const [change, integrations] = await Promise.all([getCodeChange(website.id, id), getIntegrations(website.id)]);
   if (!change) notFound();
-  const github = integrations.find((i) => i.provider === "GITHUB");
+  // Any connected API route can deliver a change now, not only GitHub.
+  const connected = integrations.find((i) => i.mode === "API" && i.status === "CONNECTED") ?? null;
+  const route = connected
+    ? findRoute((website.platform as PlatformKey | null) ?? "OTHER", connected.provider, connected.mode)
+    : null;
   const context = change.contextJson ? (JSON.parse(change.contextJson) as { pages?: string[]; websiteUrl?: string; framework?: string; constraints?: string[] }) : null;
 
   return (
@@ -67,7 +73,7 @@ export default async function CodeChangeDetailPage({ params }: { params: Promise
             )}
           </div>
         </div>
-        <CodeChangeReview websiteId={website.id} id={change.id} status={change.status} prUrl={change.prUrl} githubConnected={github?.status === "CONNECTED"} />
+        <CodeChangeReview websiteId={website.id} id={change.id} status={change.status} prUrl={change.prUrl} connectedRoute={route?.title ?? null} />
       </div>
 
       <p className="mt-5 rounded-lg border border-line bg-surface-2 px-4 py-3 text-[13px] text-ink-muted">{STATUS_COPY[change.status]}</p>

@@ -86,6 +86,19 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                   }
                 : null
             }
+            connection={
+              chosenIntegration
+                ? {
+                    id: chosenIntegration.id,
+                    provider: chosenIntegration.provider,
+                    mode: chosenIntegration.mode,
+                    status: chosenIntegration.status,
+                    secretHint: chosenIntegration.secretHint,
+                    label: chosenIntegration.label,
+                    lastError: chosenIntegration.lastError,
+                  }
+                : null
+            }
           />
         )}
 

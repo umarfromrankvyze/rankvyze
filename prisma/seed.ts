@@ -169,11 +169,12 @@ async function main() {
           {
             provider: "GITHUB",
             mode: "API",
-            status: "CONNECTED",
+            // Not CONNECTED: no credential is seeded, and status CONNECTED
+            // without a stored credential is a claim the demo can't back up.
+            status: "PENDING",
             label: "acme/acme-website",
             repoUrl: "https://github.com/acme/acme-website",
-            connectedAt: daysAgo(55),
-            verifiedAt: daysAgo(55),
+            accessNote: "Token to be issued by their platform lead.",
           },
         ],
       },

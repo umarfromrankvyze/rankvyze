@@ -55,6 +55,19 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
     integration: chosen
       ? { provider: chosen.provider, mode: chosen.mode, repoUrl: chosen.repoUrl ?? "", accessNote: chosen.accessNote ?? "" }
       : null,
+    connection: chosen
+      ? {
+          id: chosen.id,
+          provider: chosen.provider,
+          mode: chosen.mode,
+          status: chosen.status,
+          // Only the hint crosses to the browser — never the ciphertext, and
+          // obviously never the credential.
+          secretHint: chosen.secretHint,
+          label: chosen.label,
+          lastError: chosen.lastError,
+        }
+      : null,
   };
 
   return (
