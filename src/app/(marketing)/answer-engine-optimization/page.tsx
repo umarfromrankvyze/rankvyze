@@ -9,6 +9,8 @@ import { FinalCta } from "@/components/marketing/sections/cta";
 import { EngineIcon } from "@/components/ui/engine-icon";
 import { BreadcrumbJsonLd, FaqJsonLd, PageJsonLd, ServiceJsonLd } from "@/components/seo/json-ld";
 import { ENGINES_COVERED, SERVICE_FAQ, WHAT_WE_DO } from "@/content/services";
+import { INDUSTRIES } from "@/content/industries";
+import { ENGINE_GUIDES } from "@/content/engines";
 import { GUARANTEE_DAYS, GUARANTEE_MIN_ENGINES, PRICE_LABEL } from "@/lib/guarantee";
 
 /**
@@ -208,6 +210,66 @@ export default function AnswerEngineOptimizationPage() {
               </div>
             ))}
           </dl>
+        </div>
+      </Section>
+
+      {/* Hub links. The pillar has to actually link to the pages beneath it —
+          a cluster that only exists in the sitemap is a cluster crawlers reach
+          last and users never reach at all. */}
+      <Section className="bg-surface-2 py-16 md:py-20">
+        <div className="container-x">
+          <SectionHeading
+            eyebrow="Go deeper"
+            title="AEO by industry, and by engine."
+            description="Buyers ask different questions in every vertical, and the engines answer them differently. These pages get specific about both."
+            align="left"
+            className="max-w-2xl"
+          />
+
+          <div className="mt-10 grid gap-10 lg:grid-cols-[1.5fr_1fr] lg:gap-16">
+            <div>
+              <h3 className="font-sans text-[12px] font-semibold uppercase tracking-wider text-ink-faint">
+                By industry
+              </h3>
+              <div className="mt-4 flex flex-wrap gap-2.5">
+                {INDUSTRIES.map((industry) => (
+                  <Link
+                    key={industry.slug}
+                    href={`/answer-engine-optimization/${industry.slug}`}
+                    className="rounded-full border border-line bg-white px-4 py-2 text-[13.5px] text-ink-muted transition-colors hover:border-ink/25 hover:text-ink"
+                  >
+                    {industry.name.charAt(0).toUpperCase() + industry.name.slice(1)}
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-sans text-[12px] font-semibold uppercase tracking-wider text-ink-faint">
+                By engine
+              </h3>
+              <ul className="mt-4 space-y-2">
+                {ENGINE_GUIDES.map((engine) => (
+                  <li key={engine.slug}>
+                    <Link
+                      href={`/rank-in/${engine.slug}`}
+                      className="group flex items-center gap-2.5 rounded-xl border border-line bg-white px-4 py-3 transition-colors hover:border-ink/25"
+                    >
+                      <EngineIcon engine={engine.key} size={16} />
+                      <span className="text-[14px] font-medium text-ink">How to rank in {engine.name}</span>
+                      <ArrowRight className="ml-auto size-4 text-ink-faint transition-transform group-hover:translate-x-0.5" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href="/glossary"
+                className="mt-4 inline-flex items-center gap-1.5 text-[13.5px] font-medium text-ink-muted hover:text-ink"
+              >
+                Glossary of AI search terms <ArrowRight className="size-3.5" />
+              </Link>
+            </div>
+          </div>
         </div>
       </Section>
 

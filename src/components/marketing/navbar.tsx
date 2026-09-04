@@ -15,6 +15,7 @@ const NAV = [
   { label: "Pricing", href: "/pricing" },
   // A real crawlable page in the primary nav, rather than a fourth homepage
   // anchor — sitewide internal links are the cheapest signal the blog can get.
+  { label: "Free Tools", href: "/tools" },
   { label: "Blog", href: "/blog" },
   { label: "Resources", href: "/resources" },
 ];

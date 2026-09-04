@@ -1,5 +1,9 @@
 import { CONTENT_PAGES } from "@/content/pages";
 import { publishedPosts } from "@/lib/blog";
+import { TOOLS } from "@/content/tools";
+import { INDUSTRIES } from "@/content/industries";
+import { ENGINE_GUIDES } from "@/content/engines";
+import { GLOSSARY } from "@/content/glossary";
 import { CONTENT_UPDATED, SITE, SITE_URL } from "@/lib/site";
 import { CLAIM_WINDOW_DAYS, GUARANTEE_DAYS, GUARANTEE_MIN_ENGINES, PRICE_LABEL } from "@/lib/guarantee";
 
@@ -36,6 +40,20 @@ How the measurement works: analysts ask each tracked prompt on each engine in a 
 - [Answer Engine Optimization services](${SITE_URL}/answer-engine-optimization): What AEO is, what the engagement covers, and what it costs.
 - [Pricing](${SITE_URL}/pricing): ${PRICE_LABEL} one-time, what's included, and the FAQ.
 - [The ${GUARANTEE_DAYS}-day guarantee](${SITE_URL}/guarantee): Exactly what counts as a mention, how it's judged, and the conditions that void it.
+
+## Free tools
+${TOOLS.map((t) => `- [${t.name}](${SITE_URL}/tools/${t.slug}): ${t.blurb}`).join("\n")}
+- [Free AEO scan](${SITE_URL}/pricing): Ten weighted signals scored out of 100, no signup.
+
+## How each engine works
+${ENGINE_GUIDES.map((e) => `- [How to rank in ${e.name}](${SITE_URL}/rank-in/${e.slug}): ${e.metaDescription}`).join("\n")}
+
+## AEO by industry
+${INDUSTRIES.map((i) => `- [${i.metaTitle}](${SITE_URL}/answer-engine-optimization/${i.slug}): ${i.metaDescription}`).join("\n")}
+
+## Definitions
+Each term below has a self-contained definition at its own URL.
+${GLOSSARY.map((g) => `- [${g.term}](${SITE_URL}/glossary/${g.slug}): ${g.definition}`).join("\n")}
 
 ## Guides and reference
 ${guides.map((p) => `- [${p.title}](${SITE_URL}/${p.slug}): ${p.description}`).join("\n")}

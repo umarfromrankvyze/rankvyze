@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, BookOpen, FileQuestion, FileText, PenLine } from "lucide-react";
+import { ArrowRight, BookMarked, BookOpen, Compass, FileQuestion, FileText, PenLine } from "lucide-react";
 import { Section, SectionHeading } from "@/components/marketing/section";
 import { Reveal } from "@/components/shared/reveal";
 import { FinalCta } from "@/components/marketing/sections/cta";
@@ -17,6 +17,8 @@ const ITEMS = [
   { href: "/aeo-guide", icon: BookOpen, title: "The AEO Guide", text: "A practical introduction to getting recommended by AI engines — seven steps, no jargon." },
   { href: "/docs", icon: FileText, title: "Documentation", text: "How the AI Visibility Score is computed, how research works, and how the optimization workflow fits together." },
   { href: "/blog", icon: PenLine, title: "Blog", text: "Guides on ranking in ChatGPT, Perplexity, Gemini and AI Overviews, written from real engine research." },
+  { href: "/rank-in", icon: Compass, title: "Engine Guides", text: "One guide per engine: how ChatGPT, Perplexity, AI Overviews, Claude and Copilot each build an answer, and what moves them." },
+  { href: "/glossary", icon: BookMarked, title: "Glossary", text: "AEO, GEO, grounding, llms.txt, entity, citation — the vocabulary of AI search, defined in one sentence each." },
   { href: "/faq", icon: FileQuestion, title: "FAQ", text: "Straight answers about what RankVyze does and doesn't do." },
 ];
 

@@ -27,7 +27,10 @@ const COLUMNS = [
   {
     title: "Resources",
     links: [
+      { label: "Free Tools", href: "/tools" },
       { label: "AEO Guide", href: "/aeo-guide" },
+      { label: "Engine Guides", href: "/rank-in" },
+      { label: "Glossary", href: "/glossary" },
       { label: "Blog", href: "/blog" },
       { label: "Documentation", href: "/docs" },
       { label: "FAQ", href: "/faq" },
