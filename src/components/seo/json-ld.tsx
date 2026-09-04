@@ -37,6 +37,10 @@ export function SiteJsonLd() {
     email: SITE.email,
     logo: { "@type": "ImageObject", url: SITE.logo, width: 512, height: 512 },
     image: SITE.logo,
+    // Both are facts an engine uses to place the entity: when it started
+    // existing, and where it will actually take customers.
+    foundingDate: SITE.foundingDate,
+    areaServed: SITE.areaServed,
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "customer support",

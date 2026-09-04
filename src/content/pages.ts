@@ -127,7 +127,7 @@ export const CONTENT_PAGES: ContentPage[] = [
     slug: "faq",
     title: "Frequently asked questions",
     eyebrow: "FAQ",
-    description: "Straight answers about what RankVyze does — and doesn't — do.",
+    description: "Straight answers on answer engine optimization: what RankVyze does and doesn't do, how the 45-day guarantee is judged, and what counts as a mention.",
     blocks: [
       {
         heading: "Is this SEO?",

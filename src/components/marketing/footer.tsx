@@ -16,6 +16,7 @@ const COLUMNS = [
   {
     title: "Company",
     links: [
+      { label: "AEO Services", href: "/answer-engine-optimization" },
       { label: "About", href: "/about" },
       { label: "Contact", href: "/contact" },
       { label: "Pricing", href: "/pricing" },

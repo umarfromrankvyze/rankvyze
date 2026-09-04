@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { label: "Product", href: "/#product" },
   { label: "How it works", href: "/#how-it-works" },
+  { label: "AEO Services", href: "/answer-engine-optimization" },
   { label: "Pricing", href: "/pricing" },
   // A real crawlable page in the primary nav, rather than a fourth homepage
   // anchor — sitewide internal links are the cheapest signal the blog can get.

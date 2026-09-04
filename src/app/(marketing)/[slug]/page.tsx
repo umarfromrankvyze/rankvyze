@@ -20,7 +20,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     title: page.title,
     description: page.description,
     alternates: { canonical: `/${page.slug}` },
-    openGraph: { title: page.title, description: page.description, url: `/${page.slug}`, type: "article" },
+    // Declaring an openGraph block without `images` suppresses the file-based
+  // card from app/opengraph-image.tsx, which is how /blog and the content pages
+  // ended up with no og:image at all. Naming it explicitly restores it.
+  openGraph: { title: page.title, description: page.description, url: `/${page.slug}`, type: "article", images: ["/opengraph-image"] },
   };
 }
 

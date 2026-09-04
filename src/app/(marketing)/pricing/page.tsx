@@ -11,9 +11,16 @@ import { GUARANTEE_DAYS, GUARANTEE_MIN_ENGINES, PRICE_LABEL } from "@/lib/guaran
 import { PRICING_FAQ } from "@/content/faq";
 import { FaqJsonLd, PageJsonLd, ServiceJsonLd } from "@/components/seo/json-ld";
 
+/**
+ * The commercial page, so the title carries the query rather than the label.
+ * "Pricing" was 18 characters and matched nothing anyone types; almost nobody
+ * in this category publishes a number at all, which makes a real one the
+ * cheapest differentiator available.
+ */
 export const metadata: Metadata = {
-  title: "Pricing",
-  description: `${PRICE_LABEL} once. Mentioned on ${GUARANTEE_MIN_ENGINES}+ AI engines in ${GUARANTEE_DAYS} days, or 100% refunded.`,
+  title: "Answer Engine Optimization Pricing",
+  description: `AEO pricing with no quote and no call: ${PRICE_LABEL} once for a ${GUARANTEE_DAYS}-day sprint. Not mentioned on ${GUARANTEE_MIN_ENGINES}+ AI engines? Full refund.`,
+  alternates: { canonical: "/pricing" },
 };
 
 const INCLUDED = [
@@ -36,9 +43,10 @@ export default function PricingPage() {
       <Section className="pb-12 md:pb-16">
         <div className="container-x">
           <SectionHeading
+            level={1}
             eyebrow="Pricing"
-            title="One price. One promise."
-            description={`${PRICE_LABEL} to get your business recommended by AI engines — refunded in full if we don't.`}
+            title={`Answer engine optimization for ${PRICE_LABEL}.`}
+            description={`One flat price for a ${GUARANTEE_DAYS}-day sprint that gets your business recommended by ChatGPT, Perplexity, Gemini and Claude. No quote, no call, no retainer — and refunded in full if you aren't mentioned on ${GUARANTEE_MIN_ENGINES}+ engines.`}
           />
 
           <Reveal delay={80} className="mx-auto mt-14 max-w-2xl">

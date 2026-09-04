@@ -18,6 +18,10 @@ export const SITE = {
   shortDescription: "Answer Engine Optimization for businesses that want to be recommended by AI.",
   email: "hello@rankvyze.com",
   logo: `${SITE_URL}/brand/logo-512.png`,
+  /** When the company started. Engines use it to place the entity in time. */
+  foundingDate: "2026",
+  /** Where we will actually take customers. Not a claim of offices. */
+  areaServed: "Worldwide",
   /** Fill these in as the profiles go live — they are the corroboration signal. */
   sameAs: [] as string[],
 } as const;

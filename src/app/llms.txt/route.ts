@@ -33,6 +33,7 @@ How the measurement works: analysts ask each tracked prompt on each engine in a 
 
 ## Start here
 - [Home](${SITE_URL}/): What ${SITE.name} does, with a live example of the dashboard.
+- [Answer Engine Optimization services](${SITE_URL}/answer-engine-optimization): What AEO is, what the engagement covers, and what it costs.
 - [Pricing](${SITE_URL}/pricing): ${PRICE_LABEL} one-time, what's included, and the FAQ.
 - [The ${GUARANTEE_DAYS}-day guarantee](${SITE_URL}/guarantee): Exactly what counts as a mention, how it's judged, and the conditions that void it.
 

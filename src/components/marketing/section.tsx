@@ -32,20 +32,27 @@ interface SectionHeadingProps {
   align?: "center" | "left";
   className?: string;
   dark?: boolean;
+  /**
+   * Heading level. Defaults to 2, because most uses are a section inside a page
+   * that already has an h1.
+   *
+   * Pass 1 when this heading opens the page. /pricing and /resources shipped
+   * with no h1 at all for exactly this reason: they lead with a SectionHeading,
+   * which was hard-coded to h2, so the most commercially important page on the
+   * site had no top-level heading for Google or an answer engine to read.
+   */
+  level?: 1 | 2;
 }
 
-export function SectionHeading({ eyebrow, title, description, align = "center", className, dark }: SectionHeadingProps) {
+export function SectionHeading({ eyebrow, title, description, align = "center", className, dark, level = 2 }: SectionHeadingProps) {
+  const headingClass = cn(
+    "text-balance font-display text-[2rem] font-bold leading-[1.08] tracking-[-0.03em] sm:text-[2.6rem] md:text-[3.1rem]",
+    dark ? "text-white" : "text-ink",
+  );
   return (
     <Reveal className={cn("max-w-3xl", align === "center" && "mx-auto text-center", className)}>
       {eyebrow && <p className={cn("eyebrow mb-4", dark && "text-brand-400")}>{eyebrow}</p>}
-      <h2
-        className={cn(
-          "text-balance font-display text-[2rem] font-bold leading-[1.08] tracking-[-0.03em] sm:text-[2.6rem] md:text-[3.1rem]",
-          dark ? "text-white" : "text-ink",
-        )}
-      >
-        {title}
-      </h2>
+      {level === 1 ? <h1 className={headingClass}>{title}</h1> : <h2 className={headingClass}>{title}</h2>}
       {description && (
         <p
           className={cn(

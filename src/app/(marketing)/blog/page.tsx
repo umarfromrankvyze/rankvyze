@@ -18,7 +18,10 @@ export const metadata: Metadata = {
     canonical: "/blog",
     types: { "application/rss+xml": `${SITE_URL}/blog/rss.xml` },
   },
-  openGraph: { title: TITLE, description: DESCRIPTION, url: "/blog", type: "website" },
+  // Declaring an openGraph block without `images` suppresses the file-based
+  // card from app/opengraph-image.tsx, which is how /blog and the content pages
+  // ended up with no og:image at all. Naming it explicitly restores it.
+  openGraph: { title: TITLE, description: DESCRIPTION, url: "/blog", type: "website", images: ["/opengraph-image"] },
 };
 
 function formatDate(iso: string) {

@@ -6,7 +6,12 @@ import { Reveal } from "@/components/shared/reveal";
 import { FinalCta } from "@/components/marketing/sections/cta";
 import { publishedPosts } from "@/lib/blog";
 
-export const metadata: Metadata = { title: "Resources", description: "Guides, documentation and writing on answer engine optimization." };
+export const metadata: Metadata = {
+  title: "AEO Resources — Guides to Ranking in AI Search",
+  description:
+    "Guides and research on answer engine optimization: how ChatGPT, Perplexity, Gemini and AI Overviews decide which businesses to recommend.",
+  alternates: { canonical: "/resources" },
+};
 
 const ITEMS = [
   { href: "/aeo-guide", icon: BookOpen, title: "The AEO Guide", text: "A practical introduction to getting recommended by AI engines — seven steps, no jargon." },
@@ -23,7 +28,12 @@ export default async function ResourcesPage() {
     <>
       <Section>
         <div className="container-x">
-          <SectionHeading eyebrow="Resources" title="Learn how AI search works." description="Everything we've learned from researching how AI engines decide who to recommend." />
+          <SectionHeading
+            level={1}
+            eyebrow="Resources"
+            title="Learn how AI search actually works."
+            description="Everything we've learned from running real buyer questions through ChatGPT, Perplexity, Gemini and Claude — what makes an engine name one business over another, and how to change the answer."
+          />
           <div className="mx-auto mt-14 grid max-w-4xl gap-4 sm:grid-cols-2">
             {ITEMS.map((it, i) => (
               <Reveal key={it.href} delay={i * 70}>
