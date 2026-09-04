@@ -51,7 +51,7 @@ export function Navbar({ signedIn = false }: { signedIn?: boolean }) {
         <div className="container-x flex h-16 items-center justify-between">
           <Logo />
 
-          <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">
+          <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
             {NAV.map((item) => (
               <Link
                 key={item.href}
@@ -66,7 +66,7 @@ export function Navbar({ signedIn = false }: { signedIn?: boolean }) {
             ))}
           </nav>
 
-          <div className="hidden items-center gap-2 md:flex">
+          <div className="hidden items-center gap-2 lg:flex">
             {signedIn ? (
               <Button variant="dark" asChild>
                 <Link href="/dashboard">
@@ -89,7 +89,7 @@ export function Navbar({ signedIn = false }: { signedIn?: boolean }) {
 
           <button
             type="button"
-            className="-mr-1.5 inline-flex size-11 items-center justify-center rounded-lg text-ink md:hidden"
+            className="-mr-1.5 inline-flex size-11 items-center justify-center rounded-lg text-ink lg:hidden"
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
             aria-controls="mobile-menu"
@@ -116,7 +116,7 @@ export function Navbar({ signedIn = false }: { signedIn?: boolean }) {
       <div
         id="mobile-menu"
         className={cn(
-          "md:hidden",
+          "lg:hidden",
           open
             ? "fixed inset-x-0 top-16 z-40 h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain bg-white"
             : "hidden",

@@ -32,6 +32,8 @@ const WIDTHS = [
 const ROUTES = [
   "/",
   "/pricing",
+  "/answer-engine-optimization",
+  "/blog/what-answer-engine-optimization-costs",
   "/guarantee",
   "/blog",
   "/blog/how-to-rank-on-chatgpt",
