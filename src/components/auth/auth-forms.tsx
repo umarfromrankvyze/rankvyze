@@ -38,7 +38,7 @@ function PasswordInput({ id, name, autoComplete, invalid, placeholder }: { id: s
       <button
         type="button"
         onClick={() => setShow((s) => !s)}
-        className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-1 text-ink-faint hover:text-ink"
+        className="absolute right-1 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-lg text-ink-faint transition-colors hover:text-ink pointer-coarse:size-11"
         aria-label={show ? "Hide password" : "Show password"}
       >
         {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -75,7 +75,7 @@ export function LoginForm({ googleEnabled, next }: { googleEnabled: boolean; nex
             <PasswordInput id="password" name="password" autoComplete="current-password" invalid={Boolean(errors?.password)} placeholder="••••••••" />
           </Field>
           <div className="flex items-center justify-end">
-            <Link href="/forgot-password" className="text-[13px] font-medium text-ink-muted hover:text-ink">
+            <Link href="/forgot-password" className="inline-flex items-center text-[13px] font-medium text-ink-muted hover:text-ink pointer-coarse:min-h-11">
               Forgot password?
             </Link>
           </div>

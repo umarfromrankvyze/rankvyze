@@ -18,7 +18,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div className="flex flex-col px-6 py-6 sm:px-10">
         <div className="flex items-center justify-between">
           <Logo />
-          <Link href="/" className="text-[13px] font-medium text-ink-muted transition-colors hover:text-ink">
+          <Link href="/" className="inline-flex items-center text-[13px] font-medium text-ink-muted transition-colors hover:text-ink pointer-coarse:min-h-11">
             ← Back to site
           </Link>
         </div>

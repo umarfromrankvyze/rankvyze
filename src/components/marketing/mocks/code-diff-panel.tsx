@@ -94,19 +94,19 @@ export function CodeDiffPanel() {
             ))}
           </ul>
 
-          <div className="mt-auto space-y-2 pt-6">
-            <button
-              type="button"
-              className="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/[0.04] text-[13px] font-medium text-white transition-colors hover:bg-white/[0.08]"
-            >
+          {/*
+            Divs, not buttons. This panel is a picture of the product, and these
+            two do nothing when pressed. As <button> they were focusable, were
+            announced to screen readers as available actions, and failed the
+            44px touch-target check for controls that were never real.
+          */}
+          <div aria-hidden className="mt-auto space-y-2 pt-6">
+            <div className="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/[0.04] text-[13px] font-medium text-white">
               <Check className="size-4" /> Review Changes
-            </button>
-            <button
-              type="button"
-              className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-brand-500 text-[13px] font-medium text-white shadow-brand transition-colors hover:bg-brand-600"
-            >
+            </div>
+            <div className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-brand-500 text-[13px] font-medium text-white shadow-brand">
               <GitPullRequest className="size-4" /> Create Pull Request
-            </button>
+            </div>
           </div>
         </div>
       </div>

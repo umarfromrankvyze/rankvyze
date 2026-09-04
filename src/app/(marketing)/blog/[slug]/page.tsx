@@ -79,7 +79,7 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
 
       <Link
         href="/blog"
-        className="inline-flex items-center gap-1.5 text-[14px] font-medium text-ink-faint transition-colors hover:text-ink"
+        className="inline-flex items-center gap-1.5 text-[14px] font-medium text-ink-faint transition-colors hover:text-ink pointer-coarse:min-h-11"
       >
         <ArrowLeft className="size-3.5" />
         All posts

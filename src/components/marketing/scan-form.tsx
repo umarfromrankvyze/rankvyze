@@ -15,7 +15,11 @@ export function ScanForm({ size = "lg", className }: { size?: "lg" | "md"; class
   const [state, action, pending] = useActionState(startScan, initialActionState);
   const error = state.ok ? undefined : state.error;
 
-  const controlHeight = size === "lg" ? "h-13 sm:h-11" : "h-12 sm:h-10";
+  // Width breakpoints alone shrank these below 44px on tablets and landscape
+  // phones, which are wide and still touch-operated. pointer-coarse re-raises
+  // them wherever a finger is doing the tapping.
+  const controlHeight =
+    size === "lg" ? "h-13 sm:h-11 pointer-coarse:h-13" : "h-12 sm:h-10 pointer-coarse:h-12";
 
   return (
     <div className={cn("w-full", className)}>

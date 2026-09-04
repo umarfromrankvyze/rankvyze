@@ -44,7 +44,7 @@ export default async function ResourcesPage() {
           <div className="mx-auto mt-16 max-w-4xl">
             <div className="flex items-baseline justify-between gap-4">
               <h2 className="font-display text-[20px] font-bold tracking-tight text-ink">Latest articles</h2>
-              <Link href="/blog" className="text-[14px] font-medium text-ink-muted transition-colors hover:text-ink">
+              <Link href="/blog" className="inline-flex items-center text-[14px] font-medium text-ink-muted transition-colors hover:text-ink pointer-coarse:min-h-11">
                 All posts
               </Link>
             </div>

@@ -66,7 +66,7 @@ export function Logo({ href = "/", className, size = 28, invert, wordmarkClassNa
   );
   if (!href) return <span className={cn("inline-flex items-center gap-2.5", className)}>{content}</span>;
   return (
-    <Link href={href} className={cn("inline-flex items-center gap-2.5", className)} aria-label="RankVyze home">
+    <Link href={href} className={cn("inline-flex items-center gap-2.5 pointer-coarse:min-h-11", className)} aria-label="RankVyze home">
       {content}
     </Link>
   );
