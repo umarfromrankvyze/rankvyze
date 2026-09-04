@@ -45,7 +45,7 @@ export const INDUSTRIES: Industry[] = [
     singular: "SaaS company",
     metaTitle: "Answer Engine Optimization for SaaS",
     metaDescription:
-      "Get your SaaS recommended when buyers ask ChatGPT, Perplexity, Gemini and Claude for the best tool in your category. Comparison content, docs that render, and category clarity.",
+      "Get your SaaS recommended when buyers ask ChatGPT, Perplexity or Claude for the best tool in your category. Comparison content and category clarity.",
     h1: "Answer engine optimization for SaaS.",
     intro:
       "Software buying starts with a category question, not a brand one. Someone asks for the best tool for a job, gets three names, and evaluates only those. Losing that shortlist is losing the deal before a trial ever starts — and unlike an ad, you cannot buy your way onto it.",
@@ -108,7 +108,7 @@ export const INDUSTRIES: Industry[] = [
     singular: "agency",
     metaTitle: "Answer Engine Optimization for Agencies",
     metaDescription:
-      "Get your agency named when clients ask AI who to hire. Specialisation depth, outcome-led case studies and directory corroboration — the three things that decide agency recommendations.",
+      "Get your agency named when clients ask AI who to hire. Specialisation depth, outcome-led case studies and the directory corroboration engines look for.",
     h1: "Answer engine optimization for agencies.",
     intro:
       "Agency selection is the purest recommendation question there is: a client describes their situation and asks who should do the work. There is no product to trial and no free tier — the shortlist is the entire funnel. Agencies also compete against directories and listicles that already own the query.",
@@ -171,7 +171,7 @@ export const INDUSTRIES: Industry[] = [
     singular: "law firm",
     metaTitle: "Answer Engine Optimization for Law Firms",
     metaDescription:
-      "Get your firm named when people ask AI which lawyer to use. Practice-area depth, jurisdiction clarity and credential signals — built for how engines handle regulated advice.",
+      "Get your firm named when people ask AI which lawyer to use. Practice-area depth, jurisdiction clarity and the credential signals regulated advice needs.",
     h1: "Answer engine optimization for law firms.",
     intro:
       "Legal questions are among the most frequent things people bring to an assistant, and among the most cautiously answered. Engines hedge on legal advice, which makes the named-firm recommendation rarer and correspondingly more valuable. Jurisdiction is decisive: a firm that cannot be placed geographically is unrecommendable regardless of quality.",
@@ -297,7 +297,7 @@ export const INDUSTRIES: Industry[] = [
     singular: "healthcare provider",
     metaTitle: "Answer Engine Optimization for Healthcare",
     metaDescription:
-      "Get your practice recommended when patients ask AI where to go. Built for how engines handle health queries: credentials, locations and conservative citation behaviour.",
+      "Get your practice recommended when patients ask AI where to go. Built for how engines handle health queries: credentials, locations and caution.",
     h1: "Answer engine optimization for healthcare.",
     intro:
       "Health is the most heavily guarded category in AI answers. Engines apply their strictest source standards, prefer institutional publishers, and hedge toward telling people to see a professional. That conservatism means fewer provider names surface — and the ones that do are chosen on credential and location clarity rather than marketing.",
@@ -360,7 +360,7 @@ export const INDUSTRIES: Industry[] = [
     singular: "accounting firm",
     metaTitle: "Answer Engine Optimization for Accountants",
     metaDescription:
-      "Get your firm recommended when businesses ask AI which accountant to use. Built around specialisation, jurisdiction and the seasonal shape of accounting demand.",
+      "Get your firm recommended when businesses ask AI which accountant to use. Built around specialisation, jurisdiction and seasonal demand.",
     h1: "Answer engine optimization for accounting firms.",
     intro:
       "Accounting has an unusual property: the informational queries massively outnumber the commercial ones, and they cluster hard around filing deadlines. Firms that answer the tax question well become the source an engine reaches for when someone finally asks who should handle it.",
@@ -423,7 +423,7 @@ export const INDUSTRIES: Industry[] = [
     singular: "real estate business",
     metaTitle: "Answer Engine Optimization for Real Estate",
     metaDescription:
-      "Get named when buyers and sellers ask AI about agents, areas and process. Built for a vertical where portals own the query and local knowledge is the differentiator.",
+      "Get named when buyers and sellers ask AI about agents and areas — in a vertical where portals own the query and local knowledge is the differentiator.",
     h1: "Answer engine optimization for real estate.",
     intro:
       "Real estate is dominated by portals that engines already trust, so competing on listing data is a losing game. The opening is in the questions portals answer badly: what a neighbourhood is actually like, how the process works locally, and who is worth calling.",
@@ -486,7 +486,7 @@ export const INDUSTRIES: Industry[] = [
     singular: "home service business",
     metaTitle: "Answer Engine Optimization for Home Services",
     metaDescription:
-      "Get your trade business recommended when people ask AI who to call. Service-area clarity, pricing transparency and review corroboration for plumbers, electricians and contractors.",
+      "Get your trade business recommended when people ask AI who to call. Service-area clarity, pricing transparency and review corroboration.",
     h1: "Answer engine optimization for home services.",
     intro:
       "Home services queries are urgent, local and increasingly asked out loud. The buyer wants someone who covers their postcode, does the specific job, and can be trusted — and they want it resolved in one answer rather than a page of results to sift.",
@@ -549,7 +549,7 @@ export const INDUSTRIES: Industry[] = [
     singular: "recruitment agency",
     metaTitle: "Answer Engine Optimization for Recruitment",
     metaDescription:
-      "Get your agency recommended when employers ask AI who to hire for hiring. Sector depth, placement evidence and process transparency for staffing and search firms.",
+      "Get your agency recommended when employers ask AI which recruiter to use. Sector depth, placement evidence and process transparency.",
     h1: "Answer engine optimization for recruitment.",
     intro:
       "Recruitment has two distinct audiences asking different questions of the same engine — employers looking for a partner and candidates looking for a route. Both are worth winning, and the content that serves them barely overlaps, which is where most agency sites come unstuck.",
@@ -612,7 +612,7 @@ export const INDUSTRIES: Industry[] = [
     singular: "financial services firm",
     metaTitle: "Answer Engine Optimization for Financial Services",
     metaDescription:
-      "Get your firm recommended when people ask AI about advice, planning and providers. Built for a regulated vertical where engines apply their strictest source standards.",
+      "Get your firm recommended when people ask AI about advice and planning — a regulated vertical where engines apply their strictest source standards.",
     h1: "Answer engine optimization for financial services.",
     intro:
       "Money questions sit alongside health in the tier engines treat most carefully. Regulatory status is the gate: a firm whose authorisation cannot be established is not a candidate for recommendation, no matter how good its content. Clearing that gate is worth a great deal, because most competitors never do.",
@@ -675,7 +675,7 @@ export const INDUSTRIES: Industry[] = [
     singular: "education provider",
     metaTitle: "Answer Engine Optimization for Education",
     metaDescription:
-      "Get your course, school or training provider recommended when learners ask AI what to study and where. Outcome evidence, accreditation clarity and honest comparison.",
+      "Get your course or training provider recommended when learners ask AI what to study and where. Outcome evidence and accreditation clarity.",
     h1: "Answer engine optimization for education.",
     intro:
       "Learners ask assistants what to study, where, and whether it is worth it — and they ask before they ever see a prospectus. Education also has an unusually strong outcome question attached: engines increasingly want evidence that a programme leads somewhere, not just that it exists.",
@@ -738,7 +738,7 @@ export const INDUSTRIES: Industry[] = [
     singular: "B2B service provider",
     metaTitle: "Answer Engine Optimization for B2B Services",
     metaDescription:
-      "Get your firm recommended when businesses ask AI who to hire for consulting, IT, logistics or professional services. Built for long, committee-driven buying cycles.",
+      "Get your firm recommended when businesses ask AI who to hire for consulting, IT or logistics. Built for long, committee-driven buying cycles.",
     h1: "Answer engine optimization for B2B services.",
     intro:
       "B2B services are bought by committees over months, and the assistant is now where the longlist gets assembled — often by someone junior, early, before any vendor knows the deal exists. Being absent at that moment removes you from a process you never learn was running.",
@@ -801,7 +801,7 @@ export const INDUSTRIES: Industry[] = [
     singular: "hospitality business",
     metaTitle: "Answer Engine Optimization for Hospitality",
     metaDescription:
-      "Get your hotel, restaurant or venue recommended when travellers ask AI where to go. Built for a vertical where OTAs and review platforms already own the query.",
+      "Get your hotel, restaurant or venue recommended when travellers ask AI where to go — where OTAs and review platforms already own the query.",
     h1: "Answer engine optimization for hospitality.",
     intro:
       "Travel and dining recommendations are among the most common things anyone asks an assistant, and hospitality is unusually exposed: booking platforms and review aggregators sit between you and the traveller, and engines trust them. The winnable ground is specificity — the occasion, the constraint, the local knowledge an aggregator cannot express.",
@@ -864,7 +864,7 @@ export const INDUSTRIES: Industry[] = [
     singular: "manufacturer",
     metaTitle: "Answer Engine Optimization for Manufacturing",
     metaDescription:
-      "Get your company named when buyers ask AI to source a supplier. Specification depth, certification clarity and capability data for industrial and B2B suppliers.",
+      "Get your company named when buyers ask AI to source a supplier. Specification depth, certification clarity and capability data.",
     h1: "Answer engine optimization for manufacturing.",
     intro:
       "Industrial sourcing is a specification problem. A buyer describes a material, a tolerance, a volume and a standard, and needs suppliers who can meet it. That is a question engines can answer well — provided the specifications exist somewhere machine-readable, which on most manufacturer sites they do not.",
