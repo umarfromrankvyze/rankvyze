@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { paymentProvider } from "@/lib/payments";
+import { paymentProvider, paymentsAreLive } from "@/lib/payments";
 import { activateEngagement } from "@/server/engagement";
 
 /**
@@ -11,6 +11,13 @@ import { activateEngagement } from "@/server/engagement";
  * before processing and keyed by provider event id, so redelivery is a no-op.
  */
 export async function POST(req: Request) {
+  // Without a configured provider the only implementation available is the
+  // test one, which verifies nothing. Refuse outright rather than accept an
+  // unsigned body that could mark an order paid.
+  if (!paymentsAreLive() && process.env.NODE_ENV === "production") {
+    return NextResponse.json({ error: "payments not configured" }, { status: 503 });
+  }
+
   const raw = await req.text();
 
   let event;
@@ -34,18 +41,28 @@ export async function POST(req: Request) {
       data: { provider, eventId: event.eventId, type: event.type, payload: raw.slice(0, 20_000) },
     }));
 
+  /** metadata.orderId is the durable link; the session id is a fallback. */
+  const findOrder = async () => {
+    if (event.orderId) {
+      const byId = await db.order.findUnique({ where: { id: event.orderId } });
+      if (byId) return byId;
+    }
+    if (event.providerCheckoutId) {
+      return db.order.findFirst({ where: { providerCheckoutId: event.providerCheckoutId } });
+    }
+    return null;
+  };
+
   try {
     if (event.type === "payment.succeeded") {
-      const order = event.providerCheckoutId
-        ? await db.order.findFirst({ where: { providerCheckoutId: event.providerCheckoutId } })
-        : null;
+      const order = await findOrder();
 
       if (!order) {
         // Keep the event; a missing order is an operational problem, not a
         // reason to make the provider retry forever.
         await db.webhookEvent.update({
           where: { id: record.id },
-          data: { processedAt: new Date(), error: "No matching order for checkout id" },
+          data: { processedAt: new Date(), error: "No matching order for this event" },
         });
         return NextResponse.json({ ok: true, warning: "no matching order" });
       }
@@ -55,8 +72,21 @@ export async function POST(req: Request) {
         providerPaymentId: event.providerPaymentId,
         providerCustomerId: event.providerCustomerId,
       });
-    } else if (event.type === "payment.failed" && event.providerCheckoutId) {
-      await db.order.updateMany({ where: { providerCheckoutId: event.providerCheckoutId }, data: { status: "FAILED" } });
+    } else if (event.type === "payment.failed") {
+      const order = await findOrder();
+      if (order) await db.order.update({ where: { id: order.id }, data: { status: "FAILED" } });
+    } else if (event.type === "refund.succeeded") {
+      // Covers refunds issued from the Dodo dashboard rather than our admin UI.
+      const order = await findOrder();
+      if (order && order.status !== "REFUNDED") {
+        await db.$transaction([
+          db.order.update({
+            where: { id: order.id },
+            data: { status: "REFUNDED", refundedAt: new Date(), refundAmount: event.amountCents ?? order.amount },
+          }),
+          db.engagement.updateMany({ where: { orderId: order.id }, data: { status: "REFUNDED" } }),
+        ]);
+      }
     }
 
     await db.webhookEvent.update({ where: { id: record.id }, data: { processedAt: new Date() } });

@@ -18,6 +18,8 @@ const PAGES = [
   "/guarantee",
   "/blog",
   "/blog/how-to-rank-on-chatgpt",
+  "/blog/ai-crawlers-robots-txt",
+  "/blog/how-to-choose-an-aeo-tool",
   "/blog/what-is-answer-engine-optimization",
   "/resources",
   "/aeo-guide",

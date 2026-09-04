@@ -37,6 +37,8 @@ const ROUTES = [
   "/guarantee",
   "/blog",
   "/blog/how-to-rank-on-chatgpt",
+  "/blog/ai-crawlers-robots-txt",
+  "/blog/how-to-choose-an-aeo-tool",
   "/resources",
   "/contact",
   "/about",

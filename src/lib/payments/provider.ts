@@ -41,6 +41,8 @@ export interface RefundResult {
 export interface NormalizedEvent {
   eventId: string;
   type: "payment.succeeded" | "payment.failed" | "refund.succeeded" | "unknown";
+  /** Our own Order id, round-tripped through provider metadata. Primary key. */
+  orderId?: string;
   providerCheckoutId?: string;
   providerPaymentId?: string;
   providerCustomerId?: string;

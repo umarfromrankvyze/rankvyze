@@ -25,6 +25,11 @@ export const devProvider: PaymentProvider = {
   },
 
   async parseWebhook(rawBody: string): Promise<NormalizedEvent> {
+    // This provider performs no signature verification, so it must never be
+    // reachable in production. The route also guards this; belt and braces.
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("The test payment provider cannot process webhooks in production.");
+    }
     const body = JSON.parse(rawBody) as Record<string, string>;
     return {
       eventId: body.eventId ?? `dev_evt_${randomBytes(6).toString("hex")}`,
