@@ -1,15 +1,15 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Code2, GitBranch, ShoppingBag, Upload, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
 import { Field } from "@/components/ui/field";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { changePassword, updateIntegration, updateProfile, updateWebsiteSettings } from "@/server/actions/workspace";
+import { changePassword, updateProfile, updateWebsiteSettings } from "@/server/actions/workspace";
+import { confirmPlatform, saveIntegrationStep } from "@/server/actions/onboarding";
+import { DeliveryStep, type DeliveryChoice } from "@/components/onboarding/delivery-step";
+import type { PlatformKey } from "@/lib/enums";
 import type { FieldErrors } from "@/lib/validation";
 
 function useFormAction<T extends Record<string, string>>(action: (input: T) => Promise<{ ok: boolean; error?: string; message?: string; fieldErrors?: FieldErrors }>) {
@@ -151,83 +151,65 @@ export function WebsiteForm({ websiteId, values }: { websiteId: string; values: 
   );
 }
 
-const PROVIDERS: { key: string; label: string; icon: LucideIcon; text: string; needsUrl?: boolean }[] = [
-  { key: "GITHUB", label: "GitHub", icon: GitBranch, text: "Deliver approved fixes as pull requests against your repository.", needsUrl: true },
-  { key: "SHOPIFY", label: "Shopify", icon: ShoppingBag, text: "Theme, metafield and structured data updates for Shopify stores." },
-  { key: "WORDPRESS", label: "WordPress", icon: Code2, text: "Plugin-based content and schema changes." },
-  { key: "UPLOAD", label: "Upload Code", icon: Upload, text: "Share a zip of your site source for manual implementation." },
-];
 
-export function ConnectionsPanel({ websiteId, integrations }: { websiteId: string; integrations: { provider: string; status: string; label: string | null; repoUrl: string | null }[] }) {
-  const [connecting, setConnecting] = useState<string | null>(null);
-  const [repoUrl, setRepoUrl] = useState("");
+export function ConnectionsPanel({
+  platform,
+  platformConfidence,
+  platformSignals,
+  chosen,
+}: {
+  platform: PlatformKey;
+  platformConfidence: number | null;
+  platformSignals: string[];
+  chosen: { provider: string; mode: string; repoUrl: string; accessNote: string } | null;
+}) {
   const [pending, start] = useTransition();
+  const [value, setValue] = useState<DeliveryChoice>({
+    platform,
+    provider: chosen?.provider ?? null,
+    mode: chosen?.mode ?? null,
+    repoUrl: chosen?.repoUrl ?? "",
+    accessNote: chosen?.accessNote ?? "",
+  });
 
-  const act = (provider: string, action: "connect" | "disconnect") =>
+  const dirty =
+    value.platform !== platform ||
+    value.provider !== (chosen?.provider ?? null) ||
+    value.mode !== (chosen?.mode ?? null) ||
+    value.repoUrl !== (chosen?.repoUrl ?? "") ||
+    value.accessNote !== (chosen?.accessNote ?? "");
+
+  const save = () =>
     start(async () => {
-      const r = await updateIntegration(websiteId, provider, { action, repoUrl });
-      if (r.ok) toast.success(r.message); else toast.error(r.error);
-      setConnecting(null);
-      setRepoUrl("");
+      await confirmPlatform({ platform: value.platform });
+      const r = await saveIntegrationStep({
+        provider: value.provider,
+        mode: value.mode,
+        repoUrl: value.repoUrl,
+        accessNote: value.accessNote,
+      });
+      if (r.ok) toast.success("Delivery route updated.");
+      else toast.error(r.error);
     });
 
   return (
-    <>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {PROVIDERS.map((p) => {
-          const row = integrations.find((i) => i.provider === p.key);
-          const status = row?.status ?? "NOT_CONNECTED";
-          return (
-            <Card key={p.key} className="flex flex-col p-5">
-              <div className="flex items-start justify-between gap-3">
-                <span className="flex size-10 items-center justify-center rounded-lg border border-line bg-surface-2">
-                  <p.icon className="size-[18px] text-ink" />
-                </span>
-                <StatusBadge status={status} />
-              </div>
-              <h3 className="mt-4 font-display text-[15px] font-semibold text-ink">{p.label}</h3>
-              <p className="mt-1 flex-1 text-[13px] leading-relaxed text-ink-muted">{p.text}</p>
-              {row?.label && <p className="mt-2 font-mono text-[12px] text-ink">{row.label}</p>}
-              <div className="mt-4 flex gap-2">
-                {status === "NOT_CONNECTED" ? (
-                  <Button size="sm" variant="outline" onClick={() => (p.needsUrl ? setConnecting(p.key) : act(p.key, "connect"))} disabled={pending}>
-                    Connect
-                  </Button>
-                ) : (
-                  <Button size="sm" variant="ghost" onClick={() => act(p.key, "disconnect")} disabled={pending}>
-                    Disconnect
-                  </Button>
-                )}
-              </div>
-            </Card>
-          );
-        })}
+    <div className="space-y-6">
+      {/* Deliberately the same component as onboarding step 4. Two copies of
+          this would drift, and the copy that drifted would be the one telling
+          a customer we can do something their platform doesn't allow. */}
+      <DeliveryStep
+        value={value}
+        onChange={setValue}
+        detectedConfidence={platformConfidence}
+        detectedSignals={platformSignals}
+        detectedPlatform={platform}
+      />
+      <div className="flex items-center gap-3 border-t border-line pt-5">
+        <Button onClick={save} loading={pending} disabled={!dirty}>
+          Save delivery route
+        </Button>
+        {!dirty && <p className="text-[13px] text-ink-faint">No unsaved changes.</p>}
       </div>
-      <p className="mt-4 text-[12.5px] leading-relaxed text-ink-faint">
-        Automated OAuth connections are being rolled out. Choosing “Connect” records your request and a RankVyze engineer completes the setup with you. Nothing is written to your site without your review.
-      </p>
-
-      <Dialog open={Boolean(connecting)} onOpenChange={(o) => !o && setConnecting(null)}>
-        <DialogContent size="sm">
-          <DialogHeader>
-            <DialogTitle>Connect GitHub</DialogTitle>
-            <DialogDescription>Which repository should receive pull requests?</DialogDescription>
-          </DialogHeader>
-          <DialogBody>
-            <Field label="Repository URL" htmlFor="repoUrl">
-              <Input id="repoUrl" value={repoUrl} onChange={(e) => setRepoUrl(e.target.value)} placeholder="https://github.com/acme/acme-website" autoFocus />
-            </Field>
-          </DialogBody>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConnecting(null)}>
-              Cancel
-            </Button>
-            <Button onClick={() => connecting && act(connecting, "connect")} loading={pending} disabled={!repoUrl.trim()}>
-              Request connection
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+    </div>
   );
 }

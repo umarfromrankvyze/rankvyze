@@ -388,34 +388,6 @@ export async function updateWebsiteSettings(websiteId: string, input: Record<str
   return succeed(undefined, "Website profile saved.");
 }
 
-export async function updateIntegration(
-  websiteId: string,
-  provider: string,
-  input: { action: "connect" | "disconnect"; repoUrl?: string },
-): Promise<ActionResult> {
-  await ctx(websiteId);
-  if (input.action === "disconnect") {
-    await db.integration.upsert({
-      where: { websiteId_provider: { websiteId, provider } },
-      create: { websiteId, provider, status: "NOT_CONNECTED" },
-      update: { status: "NOT_CONNECTED", repoUrl: null, label: null, connectedAt: null },
-    });
-    revalidateDashboard();
-    return succeed(undefined, "Disconnected.");
-  }
-
-  // No OAuth handshake exists yet — the connection is recorded as pending so
-  // staff can complete it. The UI says exactly this.
-  const label = input.repoUrl ? input.repoUrl.replace(/^https?:\/\/(www\.)?[^/]+\//, "") : null;
-  await db.integration.upsert({
-    where: { websiteId_provider: { websiteId, provider } },
-    create: { websiteId, provider, status: "PENDING", repoUrl: input.repoUrl || null, label },
-    update: { status: "PENDING", repoUrl: input.repoUrl || null, label },
-  });
-  revalidateDashboard();
-  return succeed(undefined, "Connection request saved. We'll finish the setup with you.");
-}
-
 /**
  * "Fix with AI" from an issue that has no optimization yet: create one from
  * the issue's recommendation, then queue it exactly like requestFix.

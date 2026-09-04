@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { parseJsonArray } from "@/lib/utils";
 import { Logo } from "@/components/ui/logo";
 import { OnboardingWizard, type OnboardingInitial } from "@/components/onboarding/wizard";
+import type { PlatformKey } from "@/lib/enums";
 import { signOut } from "@/server/actions/auth";
 
 export const metadata: Metadata = { title: "Set up your workspace" };
@@ -30,6 +31,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
   if (org.onboardingCompletedAt && !restart) redirect("/dashboard");
 
   const website = org.websites[0] ?? null;
+  const chosen = website?.integrations.find((i) => i.status !== "NOT_CONNECTED") ?? null;
   const initial: OnboardingInitial = {
     step: restart ? 0 : org.onboardingStep,
     website: website
@@ -44,7 +46,15 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
         }
       : null,
     competitors: website?.competitors.map((c) => ({ name: c.name, domain: c.domain })) ?? [],
-    integration: website?.integrations.find((i) => i.status !== "NOT_CONNECTED")?.provider ?? null,
+    // Detection ran when they submitted the URL on step 1. If it failed the
+    // columns are null, and step 4 asks instead of asserting.
+    platform: (website?.platform as PlatformKey | null) ?? "OTHER",
+    platformConfidence: website?.platformConfidence ?? null,
+    platformSignals: parseJsonArray(website?.platformSignals ?? null),
+    detectedPlatform: (website?.platform as PlatformKey | null) ?? null,
+    integration: chosen
+      ? { provider: chosen.provider, mode: chosen.mode, repoUrl: chosen.repoUrl ?? "", accessNote: chosen.accessNote ?? "" }
+      : null,
   };
 
   return (

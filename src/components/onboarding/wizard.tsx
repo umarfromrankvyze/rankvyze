@@ -2,26 +2,29 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Check, Code2, GitBranch, Plus, ShoppingBag, Trash2, Upload } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, CreditCard, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input, Select, Textarea } from "@/components/ui/input";
 import { Field } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
 import {
+  confirmPlatform,
   finishOnboarding,
   saveBusinessStep,
   saveCompetitorsStep,
   saveIntegrationStep,
   saveWebsiteStep,
 } from "@/server/actions/onboarding";
+import { DeliveryStep, type DeliveryChoice } from "@/components/onboarding/delivery-step";
+import type { PlatformKey } from "@/lib/enums";
 import type { FieldErrors } from "@/lib/validation";
 
 const STEPS = [
   { n: 1, title: "Website", question: "What's your website?" },
   { n: 2, title: "Business", question: "Tell us about your business." },
   { n: 3, title: "Competitors", question: "Who are your competitors?" },
-  { n: 4, title: "Connect", question: "Connect your website" },
+  { n: 4, title: "Delivery", question: "How should we ship the fixes?" },
 ];
 
 const INDUSTRIES = [
@@ -51,7 +54,12 @@ export interface OnboardingInitial {
     targetLocations: string;
   } | null;
   competitors: { name: string; domain: string }[];
-  integration: string | null;
+  platform: PlatformKey;
+  /** null when detection couldn't reach the site at all. */
+  platformConfidence: number | null;
+  platformSignals: string[];
+  detectedPlatform: PlatformKey | null;
+  integration: { provider: string; mode: string; repoUrl: string; accessNote: string } | null;
 }
 
 export function OnboardingWizard({ initial }: { initial: OnboardingInitial }) {
@@ -72,8 +80,13 @@ export function OnboardingWizard({ initial }: { initial: OnboardingInitial }) {
   const [competitors, setCompetitors] = useState<{ name: string; domain: string }[]>(
     initial.competitors.length ? initial.competitors : [{ name: "", domain: "" }, { name: "", domain: "" }, { name: "", domain: "" }],
   );
-  const [provider, setProvider] = useState<string | null>(initial.integration);
-  const [repoUrl, setRepoUrl] = useState("");
+  const [delivery, setDelivery] = useState<DeliveryChoice>({
+    platform: initial.platform,
+    provider: initial.integration?.provider ?? null,
+    mode: initial.integration?.mode ?? null,
+    repoUrl: initial.integration?.repoUrl ?? "",
+    accessNote: initial.integration?.accessNote ?? "",
+  });
 
   const next = () => {
     setErrors({});
@@ -82,7 +95,17 @@ export function OnboardingWizard({ initial }: { initial: OnboardingInitial }) {
       if (step === 1) result = await saveWebsiteStep({ url });
       else if (step === 2) result = await saveBusinessStep(business);
       else if (step === 3) result = await saveCompetitorsStep({ competitors: competitors.filter((c) => c.name || c.domain) });
-      else result = await saveIntegrationStep({ provider, repoUrl });
+      else {
+        // Record the platform they confirmed before the route that depends on
+        // it, so an admin never sees a Framer route filed under WordPress.
+        await confirmPlatform({ platform: delivery.platform });
+        result = await saveIntegrationStep({
+          provider: delivery.provider,
+          mode: delivery.mode,
+          repoUrl: delivery.repoUrl,
+          accessNote: delivery.accessNote,
+        });
+      }
 
       if (!result.ok) {
         setErrors(result.fieldErrors ?? {});
@@ -91,15 +114,16 @@ export function OnboardingWizard({ initial }: { initial: OnboardingInitial }) {
       }
       if (step < 4) setStep(step + 1);
       else {
-        toast.success("You're all set. Welcome to RankVyze.");
-        router.push("/dashboard");
+        toast.success("Setup saved. One last step.");
+        router.push("/checkout");
       }
     });
   };
 
   const skipIntegration = () => {
     start(async () => {
-      const result = await saveIntegrationStep({ provider: null });
+      await confirmPlatform({ platform: delivery.platform });
+      const result = await saveIntegrationStep({ provider: null, mode: null });
       if (!result.ok) {
         toast.error(result.error);
         return;
@@ -225,46 +249,13 @@ export function OnboardingWizard({ initial }: { initial: OnboardingInitial }) {
           )}
 
           {step === 4 && (
-            <div className="max-w-2xl space-y-5">
-              <p className="text-[14.5px] leading-relaxed text-ink-muted">
-                Connecting lets RankVyze deliver fixes as reviewable code changes. You can also do this later from Settings.
-              </p>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {[
-                  { key: "GITHUB", icon: GitBranch, label: "GitHub", text: "Pull requests against your repository." },
-                  { key: "SHOPIFY", icon: ShoppingBag, label: "Shopify", text: "Theme and metafield updates." },
-                  { key: "WORDPRESS", icon: Code2, label: "WordPress", text: "Plugin-based content and schema changes." },
-                  { key: "UPLOAD", icon: Upload, label: "Upload Code", text: "Send us a zip of your site source." },
-                ].map((opt) => (
-                  <button
-                    key={opt.key}
-                    type="button"
-                    onClick={() => setProvider(provider === opt.key ? null : opt.key)}
-                    className={cn(
-                      "flex items-start gap-3 rounded-xl border p-4 text-left transition-all",
-                      provider === opt.key ? "border-brand-500 bg-brand-50/60 ring-3 ring-brand-500/15" : "border-line bg-white hover:border-ink/25",
-                    )}
-                  >
-                    <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-lg border", provider === opt.key ? "border-brand-200 bg-white text-brand-600" : "border-line bg-surface-2 text-ink")}>
-                      <opt.icon className="size-4" />
-                    </span>
-                    <span>
-                      <span className="block text-[14px] font-semibold text-ink">{opt.label}</span>
-                      <span className="mt-0.5 block text-[12.5px] text-ink-muted">{opt.text}</span>
-                    </span>
-                  </button>
-                ))}
-              </div>
-              {provider === "GITHUB" && (
-                <Field label="Repository URL" htmlFor="repoUrl" hint="We'll request access to this repository when setting up the connection.">
-                  <Input id="repoUrl" value={repoUrl} onChange={(e) => setRepoUrl(e.target.value)} placeholder="https://github.com/acme/acme-website" />
-                </Field>
-              )}
-              <div className="rounded-xl border border-line bg-surface-2 p-4 text-[12.5px] leading-relaxed text-ink-muted">
-                Automated connections are being rolled out. Your selection is saved and a RankVyze engineer will complete the
-                setup with you — nothing is changed on your site without your review.
-              </div>
-            </div>
+            <DeliveryStep
+              value={delivery}
+              onChange={setDelivery}
+              detectedConfidence={initial.platformConfidence}
+              detectedSignals={initial.platformSignals}
+              detectedPlatform={initial.detectedPlatform}
+            />
           )}
         </div>
 
@@ -275,11 +266,11 @@ export function OnboardingWizard({ initial }: { initial: OnboardingInitial }) {
           <div className="flex items-center gap-2">
             {step === 4 && (
               <Button type="button" variant="ghost" onClick={skipIntegration} disabled={pending}>
-                Skip for now
+                Decide later
               </Button>
             )}
             <Button type="button" size="lg" onClick={next} loading={pending}>
-              {step === 4 ? "Go to dashboard" : "Continue"} {step < 4 && <ArrowRight />}
+              {step === 4 ? "Continue to payment" : "Continue"} {step < 4 ? <ArrowRight /> : <CreditCard />}
             </Button>
           </div>
         </div>

@@ -144,6 +144,15 @@ model Website {
 
   isPrimary Boolean @default(false)
 
+  /// What the site is built on — see PLATFORM_KEYS in src/lib/enums.ts.
+  /// Detected from the served HTML by src/lib/platform.ts, then confirmed by
+  /// the customer. Detection is evidence, confirmation is authority.
+  platform            String?
+  platformConfidence  Int?
+  /// JSON array of the signals detection matched, so the verdict is auditable.
+  platformSignals     String?
+  platformConfirmedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -168,16 +177,26 @@ model Website {
 }
 
 model Integration {
-  id        String  @id @default(cuid())
-  websiteId String
-  provider  String // GITHUB | SHOPIFY | WORDPRESS | UPLOAD
-  status    String  @default("NOT_CONNECTED") // NOT_CONNECTED | PENDING | CONNECTED | ERROR
-  label     String?
-  repoUrl   String?
+  id         String  @id @default(cuid())
+  websiteId  String
+  provider   String // see INTEGRATION_PROVIDERS in src/lib/enums.ts
+  /// How fixes physically land: API | EDITOR | GUIDED. See DELIVERY_MODES.
+  /// GUIDED is the default because it is the only route available on every
+  /// platform, and defaulting to a route we might not have would overstate
+  /// what we can do.
+  mode       String  @default("GUIDED")
+  status     String  @default("NOT_CONNECTED") // NOT_CONNECTED | PENDING | CONNECTED | ERROR
+  label      String?
+  repoUrl    String?
   /// JSON blob for provider-specific settings
-  config    String?
+  config     String?
+  /// What the customer told us about access — never a credential. Secrets are
+  /// handed over out of band; this column must stay safe to read in the admin.
+  accessNote String?
 
   connectedAt DateTime?
+  /// Last time we confirmed this route can actually deliver a change.
+  verifiedAt  DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 

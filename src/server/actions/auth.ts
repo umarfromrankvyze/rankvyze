@@ -50,9 +50,33 @@ export async function signUp(_prev: ActionResult, formData: FormData): Promise<A
 
   await createSession(user.id);
 
-  // Payment comes before onboarding: the engagement clock starts at purchase.
-  const scan = String(formData.get("scan") ?? "");
-  redirect(scan ? `/checkout?scan=${encodeURIComponent(scan)}` : "/checkout");
+  // Setup comes before payment. The 45-day clock starts at purchase, so it
+  // must not start while we still don't know the site, the business or the
+  // competitors — that would spend guarantee days on questions we hadn't asked
+  // yet. Onboarding first, checkout at the end of it.
+  const scanId = String(formData.get("scan") ?? "");
+  if (scanId) {
+    // They already told us the URL to get their free scan. Asking for it a
+    // second time on the next screen is the kind of small insult that loses
+    // people mid-signup, so carry it across.
+    const scan = await db.scanRequest.findUnique({ where: { id: scanId } });
+    if (scan) {
+      const org = await db.membership.findFirst({ where: { userId: user.id }, select: { organizationId: true } });
+      if (org) {
+        await db.website.create({
+          data: {
+            organizationId: org.organizationId,
+            url: scan.url,
+            domain: scan.domain,
+            name: scan.domain.split(".")[0].replace(/^\w/, (c) => c.toUpperCase()),
+            isPrimary: true,
+          },
+        });
+      }
+    }
+  }
+
+  redirect("/onboarding");
 }
 
 export async function signIn(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
@@ -75,8 +99,9 @@ export async function signIn(_prev: ActionResult, formData: FormData): Promise<A
     });
     if (membership && !next.startsWith("/checkout")) {
       const org = membership.organization;
-      if (org.orders.length === 0) next = "/checkout";
-      else if (!org.onboardingCompletedAt && !next.startsWith("/onboarding")) next = "/onboarding";
+      // Same order as signup: finish setup, then pay, then the dashboard.
+      if (!org.onboardingCompletedAt) next = "/onboarding";
+      else if (org.orders.length === 0) next = "/checkout";
     }
   }
   redirect(next);

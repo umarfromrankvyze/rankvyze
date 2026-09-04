@@ -15,9 +15,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
     if (user.role === "ADMIN") redirect("/admin");
     redirect("/onboarding");
   }
-  // Payment precedes access: the engagement clock starts at purchase.
-  if (user.role !== "ADMIN" && !(await hasPaid(workspace.organization.id))) redirect("/checkout");
-  if (!workspace.organization.onboardingCompletedAt && user.role !== "ADMIN") redirect("/onboarding");
+  // Setup, then payment, then the dashboard. Onboarding is checked first
+  // because sending someone to checkout before they have told us their website
+  // asks them to pay for a sprint we could not start.
+  if (user.role !== "ADMIN") {
+    if (!workspace.organization.onboardingCompletedAt) redirect("/onboarding");
+    if (!(await hasPaid(workspace.organization.id))) redirect("/checkout");
+  }
   if (!workspace.website) redirect("/onboarding?restart=1");
 
   const websiteId = workspace.website.id;

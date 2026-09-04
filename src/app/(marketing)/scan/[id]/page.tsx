@@ -127,7 +127,11 @@ export default async function ScanResultPage({ params }: { params: Promise<{ id:
 
         <p className="mt-5 text-center text-[13px] text-ink-faint">
           Already have an account?{" "}
-          <Link href={`/login?next=${encodeURIComponent(`/checkout?scan=${scan.id}`)}`} className="font-medium text-ink underline-offset-4 hover:underline">
+          {/* No ?next=/checkout here: sign-in already routes to setup, payment
+              or the dashboard depending on how far this account got, and a
+              hard-coded destination would bounce a new customer through
+              checkout on the way to onboarding. */}
+          <Link href="/login" className="font-medium text-ink underline-offset-4 hover:underline">
             Log in
           </Link>
         </p>

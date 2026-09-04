@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { ConnectionsPanel, PasswordForm, ProfileForm, WebsiteForm } from "@/components/dashboard/settings-forms";
 import { cn, formatDate, parseJsonArray } from "@/lib/utils";
+import type { PlatformKey } from "@/lib/enums";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -32,6 +33,8 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
     db.membership.findMany({ where: { organizationId: organization.id }, include: { user: { select: { name: true, email: true, image: true } } }, orderBy: { createdAt: "asc" } }),
     db.subscription.findUnique({ where: { organizationId: organization.id } }),
   ]);
+
+  const chosenIntegration = integrations.find((i) => i.status !== "NOT_CONNECTED") ?? null;
 
   return (
     <>
@@ -68,7 +71,23 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
           />
         )}
 
-        {tab === "connections" && <ConnectionsPanel websiteId={website.id} integrations={integrations} />}
+        {tab === "connections" && (
+          <ConnectionsPanel
+            platform={(website.platform as PlatformKey | null) ?? "OTHER"}
+            platformConfidence={website.platformConfidence}
+            platformSignals={parseJsonArray(website.platformSignals)}
+            chosen={
+              chosenIntegration
+                ? {
+                    provider: chosenIntegration.provider,
+                    mode: chosenIntegration.mode,
+                    repoUrl: chosenIntegration.repoUrl ?? "",
+                    accessNote: chosenIntegration.accessNote ?? "",
+                  }
+                : null
+            }
+          />
+        )}
 
         {tab === "plan" && (
           <>

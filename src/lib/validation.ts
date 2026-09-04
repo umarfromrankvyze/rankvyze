@@ -1,15 +1,5 @@
 import { z } from "zod";
-import {
-  CONTENT_TYPES,
-  EFFORTS,
-  INTEGRATION_PROVIDERS,
-  ISSUE_CATEGORIES,
-  OPTIMIZATION_TYPES,
-  PRIORITIES,
-  PROMPT_INTENTS,
-  SENTIMENTS,
-  SEVERITIES,
-} from "@/lib/enums";
+import { CONTENT_TYPES, DELIVERY_MODES, EFFORTS, INTEGRATION_PROVIDERS, ISSUE_CATEGORIES, OPTIMIZATION_TYPES, PLATFORM_KEYS, PRIORITIES, PROMPT_INTENTS, SENTIMENTS, SEVERITIES } from "@/lib/enums";
 
 const url = z
   .string()
@@ -65,7 +55,15 @@ export const onboardingCompetitorsSchema = z.object({
 
 export const onboardingIntegrationSchema = z.object({
   provider: z.enum(INTEGRATION_PROVIDERS).nullable(),
+  mode: z.enum(DELIVERY_MODES).nullable(),
   repoUrl: z.string().trim().max(300).optional().default(""),
+  // Free text about how we'll get access — never a credential. Secrets are
+  // exchanged out of band, so there is nowhere in this app to type one.
+  accessNote: z.string().trim().max(1000).optional().default(""),
+});
+
+export const platformSchema = z.object({
+  platform: z.enum(PLATFORM_KEYS),
 });
 
 export const promptSchema = z.object({

@@ -11,9 +11,12 @@ import {
   onboardingCompetitorsSchema,
   onboardingIntegrationSchema,
   onboardingWebsiteSchema,
+  platformSchema,
 } from "@/lib/validation";
+import { detectPlatform } from "@/lib/platform";
+import { hasPaid } from "@/server/engagement";
 import { fail, succeed, type ActionResult } from "@/server/types";
-import { INTEGRATION_PROVIDERS } from "@/lib/enums";
+import type { PlatformKey } from "@/lib/enums";
 
 async function ownerContext() {
   const user = await requireUser("/onboarding");
@@ -45,7 +48,46 @@ export async function saveWebsiteStep(input: { url: string }): Promise<ActionRes
       });
 
   await db.organization.update({ where: { id: organization.id }, data: { onboardingStep: Math.max(organization.onboardingStep, 1) } });
+
+  // Work out what the site is built on now, while the customer waits a moment
+  // on step 1, so step 4 can open on the right delivery route instead of
+  // asking them to pick from a list of platforms they'd have to translate.
+  // A detection failure is not an onboarding failure: an unreachable site is
+  // still a site we can work on, so we record nothing and let them tell us.
+  try {
+    const detection = await detectPlatform(parsed.data.url);
+    await db.website.update({
+      where: { id: saved.id },
+      data: {
+        platform: detection.platform,
+        platformConfidence: detection.confidence,
+        platformSignals: JSON.stringify(detection.signals.map((sig) => sig.label)),
+      },
+    });
+  } catch {
+    // Left null. Step 4 asks instead of guessing.
+  }
+
   return succeed({ websiteId: saved.id });
+}
+
+/**
+ * The customer overrides detection. Their answer always wins — they own the
+ * site and we do not, and a wrong platform means a delivery route that cannot
+ * work.
+ */
+export async function confirmPlatform(input: { platform: PlatformKey }): Promise<ActionResult> {
+  const parsed = platformSchema.safeParse(input);
+  if (!parsed.success) return fail("Choose the platform your site is built on.", flattenErrors(parsed.error));
+
+  const { website } = await ownerContext();
+  if (!website) return fail("Add your website first.");
+
+  await db.website.update({
+    where: { id: website.id },
+    data: { platform: parsed.data.platform, platformConfirmedAt: new Date() },
+  });
+  return succeed();
 }
 
 export async function saveBusinessStep(input: Record<string, string>): Promise<ActionResult> {
@@ -100,38 +142,49 @@ export async function saveCompetitorsStep(input: { competitors: { name: string; 
   return succeed();
 }
 
-export async function saveIntegrationStep(input: { provider: string | null; repoUrl?: string }): Promise<ActionResult> {
+export async function saveIntegrationStep(input: {
+  provider: string | null;
+  mode: string | null;
+  repoUrl?: string;
+  accessNote?: string;
+}): Promise<ActionResult> {
   const parsed = onboardingIntegrationSchema.safeParse(input);
-  if (!parsed.success) return fail("Choose a connection option.", flattenErrors(parsed.error));
+  if (!parsed.success) return fail("Choose how we should deliver fixes.", flattenErrors(parsed.error));
 
   const { organization, website } = await ownerContext();
   if (!website) return fail("Add your website first.");
 
-  // Create a row for every provider so the settings page can show all
-  // options; mark the chosen one as pending. Real OAuth/API handshakes are
-  // not wired in V1, which the UI states plainly.
-  await db.$transaction([
-    ...INTEGRATION_PROVIDERS.map((provider) =>
-      db.integration.upsert({
-        where: { websiteId_provider: { websiteId: website.id, provider } },
-        create: {
-          websiteId: website.id,
-          provider,
-          status: provider === parsed.data.provider ? "PENDING" : "NOT_CONNECTED",
-          repoUrl: provider === parsed.data.provider && parsed.data.repoUrl ? parsed.data.repoUrl : null,
-          label: provider === parsed.data.provider && parsed.data.repoUrl ? parsed.data.repoUrl.replace(/^https?:\/\/(www\.)?github\.com\//, "") : null,
-        },
-        update:
-          provider === parsed.data.provider
-            ? { status: "PENDING", repoUrl: parsed.data.repoUrl || null }
-            : {},
-      }),
-    ),
-    db.organization.update({
-      where: { id: organization.id },
-      data: { onboardingStep: 4, onboardingCompletedAt: new Date() },
-    }),
-  ]);
+  const { provider, mode, repoUrl, accessNote } = parsed.data;
+
+  // One row for the route actually chosen. The previous version wrote a row
+  // for every provider in the enum, which made "not connected" and "never
+  // offered" indistinguishable in the admin.
+  if (provider && mode) {
+    await db.integration.upsert({
+      where: { websiteId_provider: { websiteId: website.id, provider } },
+      create: {
+        websiteId: website.id,
+        provider,
+        mode,
+        status: "PENDING",
+        repoUrl: repoUrl || null,
+        accessNote: accessNote || null,
+        label: repoUrl ? repoUrl.replace(/^https?:\/\/(www\.)?(github|gitlab)\.com\//, "") : null,
+      },
+      update: { mode, status: "PENDING", repoUrl: repoUrl || null, accessNote: accessNote || null },
+    });
+    // Only one route is live at a time; anything previously chosen goes back
+    // to not-connected rather than lingering as a second pending promise.
+    await db.integration.updateMany({
+      where: { websiteId: website.id, provider: { not: provider }, status: "PENDING" },
+      data: { status: "NOT_CONNECTED" },
+    });
+  }
+
+  await db.organization.update({
+    where: { id: organization.id },
+    data: { onboardingStep: 4, onboardingCompletedAt: new Date() },
+  });
 
   revalidatePath("/dashboard");
   return succeed();
@@ -145,5 +198,8 @@ export async function finishOnboarding() {
       data: { onboardingStep: 4, onboardingCompletedAt: new Date() },
     });
   }
-  redirect("/dashboard");
+  // Setup first, payment second. The sprint clock starts at purchase, and it
+  // should not start while we still don't know what the site is or who it
+  // competes with.
+  redirect((await hasPaid(organization.id)) ? "/dashboard" : "/checkout");
 }

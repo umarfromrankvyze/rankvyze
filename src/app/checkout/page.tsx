@@ -6,6 +6,8 @@ import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { paymentsAreLive } from "@/lib/payments";
 import { GUARANTEE_DAYS, GUARANTEE_MIN_ENGINES, PRICE_LABEL } from "@/lib/guarantee";
+import { DELIVERY_MODE_LABELS, findRoute } from "@/content/platforms";
+import type { PlatformKey } from "@/lib/enums";
 import { Card } from "@/components/ui/card";
 import { PayButton } from "@/components/checkout/pay-button";
 
@@ -26,12 +28,42 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
 
   const membership = await db.membership.findFirst({
     where: { userId: user.id },
-    include: { organization: { include: { orders: { where: { status: { in: ["PAID", "REFUNDED"] } }, take: 1 } } } },
+    include: {
+      organization: {
+        include: {
+          orders: { where: { status: { in: ["PAID", "REFUNDED"] } }, take: 1 },
+          websites: {
+            orderBy: [{ isPrimary: "desc" }],
+            take: 1,
+            include: { competitors: true, integrations: { where: { status: "PENDING" }, take: 1 } },
+          },
+        },
+      },
+    },
   });
   if (!membership) redirect("/signup");
   if (membership.organization.orders.length > 0) redirect("/dashboard");
+  // Nobody reaches payment before setup: the price buys a 45-day sprint, and
+  // a sprint needs a site, a business description and a prompt set to run on.
+  if (!membership.organization.onboardingCompletedAt) redirect("/onboarding");
 
-  const scan = scanId ? await db.scanRequest.findUnique({ where: { id: scanId } }) : null;
+  const website = membership.organization.websites[0] ?? null;
+  // Show what they chose in setup, so the price is attached to a concrete plan
+  // for their specific site rather than to a generic feature list.
+  const chosen = website?.integrations[0] ?? null;
+  const route = chosen
+    ? findRoute((website?.platform as PlatformKey | null) ?? "OTHER", chosen.provider, chosen.mode)
+    : undefined;
+
+  // The scan id used to arrive as a query param straight from the results
+  // page. Onboarding now sits in between, so fall back to the most recent scan
+  // of this domain — otherwise the score vanishes from the summary and the
+  // scan-to-order attribution breaks.
+  const scan = scanId
+    ? await db.scanRequest.findUnique({ where: { id: scanId } })
+    : website
+      ? await db.scanRequest.findFirst({ where: { domain: website.domain }, orderBy: { createdAt: "desc" } })
+      : null;
   const live = paymentsAreLive();
 
   return (
@@ -51,7 +83,7 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
             <ShieldCheck className="size-4" /> The guarantee
           </p>
           <p className="mt-2.5 text-[14.5px] leading-relaxed text-ink">
-            If {scan?.domain ?? "your business"} isn&apos;t mentioned by at least{" "}
+            If {website?.domain ?? scan?.domain ?? "your business"} isn&apos;t mentioned by at least{" "}
             <span className="font-semibold">{GUARANTEE_MIN_ENGINES} of the four AI engines</span> within{" "}
             {GUARANTEE_DAYS} days, <span className="font-semibold">we refund you 100%</span>.
           </p>
@@ -86,14 +118,29 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
               </span>
               <span className="font-medium text-ink">{PRICE_LABEL}</span>
             </div>
-            {scan && (
-              <div className="flex items-start justify-between gap-4">
-                <span className="text-ink-muted">
-                  Website
-                  <span className="block font-mono text-[12.5px] text-ink">{scan.domain}</span>
-                </span>
-                <span className="text-[12.5px] text-ink-faint">scan {scan.score}/100</span>
-              </div>
+            {website && (
+              <>
+                <div className="flex items-start justify-between gap-4">
+                  <span className="text-ink-muted">
+                    Website
+                    <span className="block font-mono text-[12.5px] text-ink">{website.domain}</span>
+                  </span>
+                  {scan && <span className="text-[12.5px] text-ink-faint">scan {scan.score}/100</span>}
+                </div>
+                <div className="flex items-start justify-between gap-4">
+                  <span className="text-ink-muted">Competitors tracked</span>
+                  <span className="text-[12.5px] text-ink">{website.competitors.length}</span>
+                </div>
+                {route && (
+                  <div className="flex items-start justify-between gap-4">
+                    <span className="text-ink-muted">
+                      Fix delivery
+                      <span className="block text-[12.5px] text-ink">{route.title}</span>
+                    </span>
+                    <span className="text-[12.5px] text-ink-faint">{DELIVERY_MODE_LABELS[route.mode]}</span>
+                  </div>
+                )}
+              </>
             )}
           </div>
 
@@ -112,7 +159,7 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
             </div>
           )}
 
-          <PayButton scanId={scanId} label={live ? `Pay ${PRICE_LABEL}` : `Continue in test mode`} />
+          <PayButton scanId={scan?.id} label={live ? `Pay ${PRICE_LABEL}` : `Continue in test mode`} />
 
           <p className="mt-3 text-center text-[12px] leading-relaxed text-ink-faint">
             Billed once to {user.email}. Refundable in full under the {GUARANTEE_DAYS}-day guarantee.

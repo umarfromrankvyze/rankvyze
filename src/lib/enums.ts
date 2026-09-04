@@ -9,7 +9,52 @@ export type UserRole = (typeof USER_ROLES)[number];
 export const PLANS = ["TRIAL", "STARTER", "GROWTH", "SCALE"] as const;
 export type Plan = (typeof PLANS)[number];
 
-export const INTEGRATION_PROVIDERS = ["GITHUB", "SHOPIFY", "WORDPRESS", "UPLOAD"] as const;
+/**
+ * What the customer's site is built on. Detected from the served HTML by
+ * src/lib/platform.ts, then confirmed by the customer — detection is good but
+ * it is not a substitute for the person who owns the site telling us.
+ */
+export const PLATFORM_KEYS = [
+  "FRAMER",
+  "WEBFLOW",
+  "WORDPRESS",
+  "WIX",
+  "SHOPIFY",
+  "SQUARESPACE",
+  "WEBSITE_BUILDER_OTHER",
+  "CODE",
+  "OTHER",
+] as const;
+export type PlatformKey = (typeof PLATFORM_KEYS)[number];
+
+/**
+ * How a fix physically reaches the customer's site. This is the honest core of
+ * the whole delivery story: we can only push changes ourselves where a write
+ * API exists, so the other two modes are named rather than pretended away.
+ *
+ * API    — we hold a scoped credential and write the change ourselves.
+ * EDITOR — the customer invites us into their site builder and we make the
+ *          change in their editor, because that builder has no write API.
+ * GUIDED — we produce the exact change and the customer applies it. Used where
+ *          neither of the above is available or wanted.
+ *
+ * Every mode ends the same way: we re-fetch the live URL and verify the signal
+ * is actually present. That check does not care which mode produced it.
+ */
+export const DELIVERY_MODES = ["API", "EDITOR", "GUIDED"] as const;
+export type DeliveryMode = (typeof DELIVERY_MODES)[number];
+
+export const INTEGRATION_PROVIDERS = [
+  "GITHUB",
+  "WORDPRESS",
+  "SHOPIFY",
+  "WEBFLOW",
+  "FRAMER",
+  "WIX",
+  "SQUARESPACE",
+  "UPLOAD",
+  "GUIDED",
+] as const;
 export type IntegrationProvider = (typeof INTEGRATION_PROVIDERS)[number];
 
 export const INTEGRATION_STATUSES = ["NOT_CONNECTED", "PENDING", "CONNECTED", "ERROR"] as const;

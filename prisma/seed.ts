@@ -158,18 +158,23 @@ async function main() {
       productsService: "Shopify & Shopify Plus development, store redesigns, migrations, CRO, headless builds",
       targetLocations: JSON.stringify(["United States", "United Kingdom", "India"]),
       isPrimary: true,
+      // The three demo sites deliberately cover all three delivery modes, so
+      // the dashboard and admin both show what each one looks like in place.
+      platform: "CODE",
+      platformConfidence: 88,
+      platformSignals: JSON.stringify(["Next.js build assets (/_next/static/)", "x-powered-by: Next.js"]),
+      platformConfirmedAt: daysAgo(56),
       integrations: {
         create: [
           {
             provider: "GITHUB",
+            mode: "API",
             status: "CONNECTED",
             label: "acme/acme-website",
             repoUrl: "https://github.com/acme/acme-website",
             connectedAt: daysAgo(55),
+            verifiedAt: daysAgo(55),
           },
-          { provider: "SHOPIFY", status: "NOT_CONNECTED" },
-          { provider: "WORDPRESS", status: "NOT_CONNECTED" },
-          { provider: "UPLOAD", status: "NOT_CONNECTED" },
         ],
       },
     },
@@ -574,12 +579,26 @@ async function main() {
       productsService: "Work permits, startup visas, permanent residency",
       targetLocations: JSON.stringify(["Canada"]),
       isPrimary: true,
+      platform: "WORDPRESS",
+      platformConfidence: 100,
+      platformSignals: JSON.stringify([
+        '<meta name="generator" content="WordPress">',
+        "/wp-content/ asset paths",
+        "wp-json REST API link",
+      ]),
+      platformConfirmedAt: daysAgo(30),
       integrations: {
         create: [
-          { provider: "GITHUB", status: "NOT_CONNECTED" },
-          { provider: "SHOPIFY", status: "NOT_CONNECTED" },
-          { provider: "WORDPRESS", status: "PENDING", label: "northstarlegal.com" },
-          { provider: "UPLOAD", status: "NOT_CONNECTED" },
+          // Their managed host disables application passwords, which is the
+          // exact case the WordPress playbook warns about — so the fallback is
+          // an editor login rather than the API.
+          {
+            provider: "WORDPRESS",
+            mode: "EDITOR",
+            status: "PENDING",
+            label: "northstarlegal.com",
+            accessNote: "Managed host blocks application passwords. Editor login to be issued by their IT contact.",
+          },
         ],
       },
       competitors: {
@@ -702,7 +721,21 @@ async function main() {
       productsService: "General dentistry, Invisalign, whitening, implants",
       targetLocations: JSON.stringify(["Austin, TX"]),
       isPrimary: true,
-      integrations: { create: [{ provider: "WORDPRESS", status: "NOT_CONNECTED" }] },
+      platform: "WIX",
+      platformConfidence: 88,
+      platformSignals: JSON.stringify(["X-Wix-Request-Id response header", "parastorage.com asset host"]),
+      platformConfirmedAt: daysAgo(20),
+      integrations: {
+        create: [
+          {
+            provider: "GUIDED",
+            mode: "GUIDED",
+            status: "CONNECTED",
+            connectedAt: daysAgo(20),
+            accessNote: "Practice manager applies changes on Wednesdays.",
+          },
+        ],
+      },
       competitors: { create: [{ name: "Lakeside Dental", domain: "lakesidedental.com" }, { name: "Smile Austin", domain: "smileaustin.com" }] },
       prompts: {
         create: [

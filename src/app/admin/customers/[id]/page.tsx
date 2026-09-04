@@ -16,6 +16,8 @@ import { NewSessionDialog } from "@/components/admin/new-session-dialog";
 import { AuditFormDialog } from "@/components/admin/audit-form-dialog";
 import { IssueFormDialog } from "@/components/admin/issue-form-dialog";
 import { formatDate, formatRelative, parseJsonArray, titleCase } from "@/lib/utils";
+import { DELIVERY_MODE_LABELS, findRoute, getPlaybook, platformName } from "@/content/platforms";
+import type { DeliveryMode, PlatformKey } from "@/lib/enums";
 
 export const metadata: Metadata = { title: "Customer" };
 
@@ -151,24 +153,93 @@ export default async function AdminCustomerPage({ params }: { params: Promise<{ 
             <Card>
               <CardHeader>
                 <div>
-                  <CardTitle>Integrations</CardTitle>
-                  <CardDescription>Mark a connection complete once set up.</CardDescription>
+                  <CardTitle>How fixes reach this site</CardTitle>
+                  <CardDescription>
+                    Read this before writing an optimization. It decides whether a fix can be a pull request, an edit in
+                    their builder, or a change pack they apply themselves.
+                  </CardDescription>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                {w.integrations.length === 0 && <p className="text-[13px] text-ink-muted">None requested.</p>}
-                {w.integrations.map((i) => (
-                  <div key={i.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-line p-2.5">
-                    <span>
-                      <span className="block text-[13px] font-medium text-ink">{titleCase(i.provider)}</span>
-                      {i.label && <span className="block font-mono text-[11px] text-ink-faint">{i.label}</span>}
-                    </span>
-                    <span className="flex items-center gap-2">
-                      <StatusBadge status={i.status} />
-                      <IntegrationToggle id={i.id} status={i.status} />
-                    </span>
-                  </div>
-                ))}
+                <div className="rounded-lg border border-line bg-surface-2 p-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Platform</p>
+                  <p className="mt-0.5 text-[13.5px] font-medium text-ink">
+                    {platformName(w.platform ?? "OTHER")}
+                    {w.platformConfirmedAt ? (
+                      <span className="ml-2 text-[11.5px] font-normal text-success">confirmed by customer</span>
+                    ) : w.platformConfidence !== null ? (
+                      <span className="ml-2 text-[11.5px] font-normal text-ink-faint">
+                        detected, {w.platformConfidence}% confidence — unconfirmed
+                      </span>
+                    ) : (
+                      <span className="ml-2 text-[11.5px] font-normal text-ink-faint">not detected</span>
+                    )}
+                  </p>
+                  {parseJsonArray(w.platformSignals).length > 0 && (
+                    <ul className="mt-2 space-y-1">
+                      {parseJsonArray(w.platformSignals).map((sig) => (
+                        <li key={sig} className="font-mono text-[11px] text-ink-faint">
+                          {sig}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <ul className="mt-3 space-y-1 border-t border-line pt-2">
+                    {getPlaybook((w.platform as PlatformKey | null) ?? "OTHER").hardLimits.map((limit) => (
+                      <li key={limit} className="text-[11.5px] leading-relaxed text-ink-muted">
+                        ⚠ {limit}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {w.integrations.filter((i) => i.status !== "NOT_CONNECTED").length === 0 && (
+                  <p className="text-[13px] text-ink-muted">No delivery route chosen yet.</p>
+                )}
+                {w.integrations
+                  .filter((i) => i.status !== "NOT_CONNECTED")
+                  .map((i) => {
+                    const route = findRoute((w.platform as PlatformKey | null) ?? "OTHER", i.provider, i.mode);
+                    return (
+                      <div key={i.id} className="rounded-lg border border-line p-2.5">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span>
+                            <span className="block text-[13px] font-medium text-ink">
+                              {route?.title ?? titleCase(i.provider)}
+                            </span>
+                            <span className="block text-[11.5px] text-ink-faint">
+                              {DELIVERY_MODE_LABELS[i.mode as DeliveryMode] ?? i.mode}
+                            </span>
+                            {i.label && <span className="block font-mono text-[11px] text-ink-faint">{i.label}</span>}
+                          </span>
+                          <span className="flex items-center gap-2">
+                            <StatusBadge status={i.status} />
+                            <IntegrationToggle id={i.id} status={i.status} />
+                          </span>
+                        </div>
+                        {route && route.weNeed.length > 0 && (
+                          <div className="mt-2.5 border-t border-line pt-2">
+                            <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-faint">
+                              Access to obtain
+                            </p>
+                            <ul className="mt-1 space-y-1">
+                              {route.weNeed.map((need) => (
+                                <li key={need} className="text-[11.5px] leading-relaxed text-ink-muted">
+                                  {need}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {i.accessNote && (
+                          <p className="mt-2 rounded border border-line bg-surface-2 p-2 text-[11.5px] leading-relaxed text-ink">
+                            <span className="font-semibold">Customer note: </span>
+                            {i.accessNote}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
               </CardContent>
             </Card>
             <Card>
