@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
+import { changeAwaitingReviewEmail, sendEmail } from "@/lib/email";
 import { requireAdmin } from "@/lib/auth";
 import {
   auditSchema,
@@ -270,19 +271,45 @@ export async function sendToClaude(id: string): Promise<ActionResult> {
   return succeed(undefined, "Queued for Claude. No agent is connected in this version — the job will wait here for a human to author the change.");
 }
 
-export async function upsertCodeChangeFile(input: { codeChangeId: string; fileId?: string; path: string; language: string; diff: string }): Promise<ActionResult> {
+export async function upsertCodeChangeFile(input: {
+  codeChangeId: string;
+  fileId?: string;
+  path: string;
+  language: string;
+  /** What the customer reads during review. Optional — see below. */
+  diff: string;
+  /** The complete file after the change. This is what actually gets written. */
+  content: string;
+}): Promise<ActionResult> {
   await requireAdmin();
   if (!input.path.trim()) return fail("File path is required.", { path: "Required" });
-  if (!input.diff.trim()) return fail("Diff is required.", { diff: "Required" });
+  // Content is the required half, not the diff. A diff is a description of a
+  // change; only the finished file can be committed to someone's repository,
+  // and delivery refuses without it — so refuse here instead, where the person
+  // who can fix it is looking.
+  if (!input.content.trim()) return fail("Final file content is required — it's what gets written to the site.", { content: "Required" });
 
-  const additions = input.diff.split("\n").filter((l) => l.startsWith("+") && !l.startsWith("+++")).length;
-  const deletions = input.diff.split("\n").filter((l) => l.startsWith("-") && !l.startsWith("---")).length;
+  const content = input.content;
+  const hasDiff = input.diff.trim().length > 0;
+  // With no hand-written diff, show the customer the whole resulting file as
+  // an addition. That is exactly right for a new file and still truthful for a
+  // replacement: it is what the file will contain.
+  const diff = hasDiff
+    ? input.diff
+    : content
+        .split("\n")
+        .map((l) => `+${l}`)
+        .join("\n");
+
+  const additions = diff.split("\n").filter((l) => l.startsWith("+") && !l.startsWith("+++")).length;
+  const deletions = diff.split("\n").filter((l) => l.startsWith("-") && !l.startsWith("---")).length;
 
   await db.$transaction(async (tx) => {
+    const data = { path: input.path, language: input.language, diff, content, additions, deletions };
     if (input.fileId) {
-      await tx.codeChangeFile.update({ where: { id: input.fileId }, data: { path: input.path, language: input.language, diff: input.diff, additions, deletions } });
+      await tx.codeChangeFile.update({ where: { id: input.fileId }, data });
     } else {
-      await tx.codeChangeFile.create({ data: { codeChangeId: input.codeChangeId, path: input.path, language: input.language, diff: input.diff, additions, deletions } });
+      await tx.codeChangeFile.create({ data: { codeChangeId: input.codeChangeId, ...data } });
     }
     const files = await tx.codeChangeFile.findMany({ where: { codeChangeId: input.codeChangeId } });
     await tx.codeChange.update({
@@ -294,6 +321,31 @@ export async function upsertCodeChangeFile(input: { codeChangeId: string; fileId
       },
     });
   });
+  // Tell the customer there is something waiting. The sprint moves at the
+  // speed of these reviews, and a review nobody knows about is a stalled one.
+  const job = await db.codeChange.findUnique({
+    where: { id: input.codeChangeId },
+    include: {
+      website: {
+        select: {
+          domain: true,
+          organization: { select: { members: { orderBy: { createdAt: "asc" }, take: 1, select: { user: { select: { email: true } } } } } },
+        },
+      },
+    },
+  });
+  const owner = job?.website.organization.members[0]?.user.email;
+  if (job && owner) {
+    await sendEmail(
+      changeAwaitingReviewEmail(owner, {
+        title: job.title,
+        number: job.number,
+        changeId: job.id,
+        domain: job.website.domain,
+      }),
+    );
+  }
+
   revalidateAll();
   return succeed(undefined, "File saved and job moved to review.");
 }

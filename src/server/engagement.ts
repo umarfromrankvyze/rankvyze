@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { db } from "@/lib/db";
+import { sendEmail, sprintStartedEmail } from "@/lib/email";
 import {
   daysRemaining,
   evaluateGuarantee,
@@ -57,6 +58,17 @@ export async function activateEngagement(input: {
       update: { plan: "SPRINT", status: "ACTIVE", periodStart: now, periodEnd: endsAt },
     });
   });
+
+  // Deliberately after the transaction and deliberately not awaited into it:
+  // a mail provider outage must never roll back a payment we have taken.
+  const recipient = order.email ?? (await db.user.findFirst({
+    where: { memberships: { some: { organizationId: order.organizationId } } },
+    orderBy: { createdAt: "asc" },
+    select: { email: true },
+  }))?.email;
+  if (recipient) {
+    await sendEmail(sprintStartedEmail(recipient, { domain: website?.domain ?? "your site", endsOn: endsAt }));
+  }
 
   return db.order.findUnique({ where: { id: order.id } });
 }

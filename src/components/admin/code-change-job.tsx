@@ -20,6 +20,7 @@ interface JobFile {
   path: string;
   language: string;
   diff: string;
+  content: string | null;
   additions: number;
   deletions: number;
 }
@@ -119,13 +120,13 @@ export function JobEditor({ job, files }: Props) {
           Generated changes <span className="text-[13px] font-normal text-ink-faint">({files.length})</span>
         </h2>
         <Button variant="outline" size="sm" onClick={() => setFileDialog("new")}>
-          <Plus /> Add file diff
+          <Plus /> Add file
         </Button>
       </div>
       <div className="mt-3 space-y-4">
         {files.length === 0 && (
           <div className="rounded-xl border border-dashed border-line-strong bg-surface-2 p-8 text-center text-[13px] text-ink-muted">
-            No diff yet. In V1 a human authors the diff here; adding one moves the job to “Awaiting review” for the customer.
+            No files yet. Author the finished file here; saving moves the job to “Awaiting review” for the customer, and the connected delivery route can then ship it.
           </div>
         )}
         {files.map((f) => (
@@ -201,7 +202,14 @@ export function JobEditor({ job, files }: Props) {
             key={fileDialog === "new" ? "new" : fileDialog?.id}
             action={(f) =>
               start(async () => {
-                const r = await upsertCodeChangeFile({ codeChangeId: job.id, fileId: fileDialog && fileDialog !== "new" ? fileDialog.id : undefined, path: g(f, "path"), language: g(f, "language"), diff: g(f, "diff") });
+                const r = await upsertCodeChangeFile({
+                  codeChangeId: job.id,
+                  fileId: fileDialog && fileDialog !== "new" ? fileDialog.id : undefined,
+                  path: g(f, "path"),
+                  language: g(f, "language"),
+                  diff: g(f, "diff"),
+                  content: g(f, "content"),
+                });
                 if (!r.ok) {
                   setErrors(r.fieldErrors ?? {});
                   toast.error(r.error);
@@ -213,8 +221,12 @@ export function JobEditor({ job, files }: Props) {
             }
           >
             <DialogHeader>
-              <DialogTitle>{fileDialog === "new" ? "Add a file diff" : "Edit file diff"}</DialogTitle>
-              <DialogDescription>Unified diff hunks (lines starting with +, − or space, optionally with @@ headers). Saving moves the job to “Awaiting review”.</DialogDescription>
+              <DialogTitle>{fileDialog === "new" ? "Add a file" : "Edit file"}</DialogTitle>
+              <DialogDescription>
+                The final content is what gets committed to the customer&apos;s site. The diff is only what they read
+                during review — leave it blank to show the whole file as added. Saving moves the job to “Awaiting
+                review”.
+              </DialogDescription>
             </DialogHeader>
             <DialogBody className="space-y-4">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_160px]">
@@ -229,8 +241,32 @@ export function JobEditor({ job, files }: Props) {
                   </Select>
                 </Field>
               </div>
-              <Field label="Diff" htmlFor="diff" error={errors.diff}>
-                <Textarea id="diff" name="diff" defaultValue={fileDialog && fileDialog !== "new" ? fileDialog.diff : SAMPLE_DIFF} className="min-h-[260px] font-mono text-[12.5px] leading-relaxed" invalid={Boolean(errors.diff)} spellCheck={false} />
+              <Field
+                label="Final file content"
+                htmlFor="content"
+                error={errors.content}
+                hint="The complete file after the change. This is the text that is actually written to the repository or site — a change without it cannot be delivered."
+              >
+                <Textarea
+                  id="content"
+                  name="content"
+                  defaultValue={fileDialog && fileDialog !== "new" ? (fileDialog.content ?? "") : ""}
+                  className="min-h-[260px] font-mono text-[12.5px] leading-relaxed"
+                  invalid={Boolean(errors.content)}
+                  spellCheck={false}
+                  placeholder="The whole file, top to bottom."
+                />
+              </Field>
+              <Field label="Diff for review (optional)" htmlFor="diff" error={errors.diff} hint="Unified diff hunks. Blank shows the whole file as added.">
+                <Textarea
+                  id="diff"
+                  name="diff"
+                  defaultValue={fileDialog && fileDialog !== "new" ? fileDialog.diff : ""}
+                  className="min-h-[160px] font-mono text-[12.5px] leading-relaxed"
+                  invalid={Boolean(errors.diff)}
+                  spellCheck={false}
+                  placeholder={SAMPLE_DIFF}
+                />
               </Field>
             </DialogBody>
             <DialogFooter>

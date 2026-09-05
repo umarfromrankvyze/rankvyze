@@ -3,6 +3,7 @@
 import { randomBytes } from "node:crypto";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
+import { passwordResetEmail, sendEmail } from "@/lib/email";
 import { createSession, destroySession, hashPassword, verifyPassword } from "@/lib/auth";
 import { flattenErrors, forgotPasswordSchema, resetPasswordSchema, signInSchema, signUpSchema } from "@/lib/validation";
 import { slugify } from "@/lib/utils";
@@ -129,9 +130,18 @@ export async function requestPasswordReset(_prev: ActionResult<{ devLink?: strin
   });
 
   const link = `${process.env.APP_URL ?? "http://localhost:3000"}/reset-password?token=${token}`;
-  // No email provider is wired up in V1: log the link server-side and, in
-  // development only, hand it back so the flow can be exercised end-to-end.
-  console.info(`[auth] Password reset link for ${email}: ${link}`);
+  const sent = await sendEmail(passwordResetEmail(email, link));
+
+  // The response stays identical whether or not the address exists, so the
+  // form can't be used to enumerate accounts. But a send that genuinely failed
+  // is an operational problem, so it is logged loudly rather than swallowed.
+  if (!sent.ok && !sent.notConfigured) {
+    console.error(`[auth] password reset email failed for ${email}: ${sent.error}`);
+  }
+  if (sent.notConfigured) {
+    console.info(`[auth] no email provider — reset link for ${email}: ${link}`);
+  }
+
   return succeed(
     { devLink: process.env.NODE_ENV !== "production" ? link : undefined },
     "If an account exists for that email, a reset link is on its way.",
