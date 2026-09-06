@@ -34,8 +34,19 @@ export const SITE = {
    * and the exact copy to paste, add the URLs here, then run
    * `npx tsx scripts/check-sameas.mts` before deploying — it refuses any URL
    * that doesn't resolve.
+   *
+   * Only X is listed so far, and only because it was verified rather than
+   * assumed: x.com/rankvyze returns 200 with the title "RankVyze (@RankVyze)"
+   * while a nonsense handle on the same host returns 404, so the 200 means
+   * something. LinkedIn, YouTube, GitHub/rankvyze and Product Hunt all 404 —
+   * those pages genuinely do not exist yet.
+   *
+   * Instagram, Facebook and Reddit are deliberately absent despite returning
+   * 200: they return 200 for handles that do not exist either, so a 200 there
+   * is not evidence of anything. Adding one on that basis would be asserting a
+   * corroborating source we had not actually confirmed.
    */
-  sameAs: [] as string[],
+  sameAs: ["https://x.com/rankvyze"] as string[],
 } as const;
 
 /**
