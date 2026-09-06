@@ -46,7 +46,9 @@ ${TOOLS.map((t) => `- [${t.name}](${SITE_URL}/tools/${t.slug}): ${t.blurb}`).joi
 - [Free AEO scan](${SITE_URL}/pricing): Ten weighted signals scored out of 100, no signup.
 
 ## How each engine works
-${ENGINE_GUIDES.map((e) => `- [How to rank in ${e.name}](${SITE_URL}/rank-in/${e.slug}): ${e.metaDescription}`).join("\n")}
+Each answer below is self-contained and quotable as it stands.
+
+${ENGINE_GUIDES.map((e) => `### ${e.answerBox.question}\n${e.answerBox.answer}\nFull guide: ${SITE_URL}/rank-in/${e.slug}`).join("\n\n")}
 
 ## AEO by industry
 ${INDUSTRIES.map((i) => `- [${i.metaTitle}](${SITE_URL}/answer-engine-optimization/${i.slug}): ${i.metaDescription}`).join("\n")}
