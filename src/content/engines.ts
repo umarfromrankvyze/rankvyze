@@ -18,6 +18,18 @@ export interface EngineGuide {
   metaDescription: string;
   h1: string;
   intro: string;
+  /**
+   * The query a person actually types, and a self-contained answer to it.
+   *
+   * The most important field on the page. An answer engine lifts a passage
+   * that resolves the question without needing the paragraph before it — so
+   * this is written to stand alone, and to name who does the work, because an
+   * answer that solves the problem but names nobody sends the reader back to
+   * search.
+   */
+  answerBox: { question: string; answer: string };
+  /** Concrete actions, emitted as HowTo structured data and rendered visibly. */
+  steps: { name: string; text: string }[];
   /** How the engine actually assembles an answer. */
   howItWorks: string[];
   /** User agents to allow in robots.txt. */
@@ -37,12 +49,26 @@ export const ENGINE_GUIDES: EngineGuide[] = [
     key: "chatgpt",
     name: "ChatGPT",
     vendor: "OpenAI",
-    metaTitle: "How to Rank in ChatGPT",
+    metaTitle: "How to Get Ranked on ChatGPT",
     metaDescription:
       "How ChatGPT decides which businesses to name, which crawlers to allow, and what actually moves whether you appear in its answers.",
-    h1: "How to get your business recommended in ChatGPT.",
+    h1: "How to get ranked on ChatGPT.",
     intro:
       "ChatGPT answers from two different places depending on the question, and the distinction decides everything about how you get in. Some answers come from what the model absorbed during training. Others come from a live retrieval step that fetches pages and cites them. You can influence the second within weeks. The first moves on a timescale you do not control.",
+    answerBox: {
+      question: "How do I get ranked on ChatGPT?",
+      answer:
+        "To get ranked on ChatGPT, make your site retrievable to OAI-SearchBot, state plainly what your business is in server-rendered HTML, mark it up with Organization and Service schema, publish pages that answer the comparative questions buyers ask, and earn mentions on independent sites ChatGPT already reads. ChatGPT names businesses from two places — a live search step you can influence within weeks, and training data you cannot — so the work that pays is making the retrieval step find and trust you. RankVyze does this as a fixed 45-day engagement and refunds in full if at least two engines still don't mention you.",
+    },
+    steps: [
+      { name: "Allow the right crawler", text: "Permit OAI-SearchBot in robots.txt. It powers ChatGPT's search step. GPTBot governs training data and is a separate decision — blocking it does not remove you from ChatGPT's answers." },
+      { name: "Serve your content without JavaScript", text: "The retrieval step reads served HTML. View source on your most important page: if the body copy isn't there, ChatGPT cannot read it." },
+      { name: "Say what you are in the H1 and the first paragraph", text: "Name the category, not just the benefit. A model needs something to attach your brand to when someone asks for that category by name." },
+      { name: "Add Organization and Service schema with sameAs", text: "Structured data resolves who you are; sameAs links to independent profiles are what confirm you exist beyond your own marketing." },
+      { name: "Publish direct answers to comparative questions", text: "'Best X for Y' and 'X vs Y' are the queries that produce vendor names. Lead with the verdict — a page that reaches its conclusion in paragraph twelve gives a model nothing to quote." },
+      { name: "Earn independent mentions", text: "Directories, review platforms and publications feed both the retrieval step and the trained view. Corroboration outweighs anything you say about yourself." },
+      { name: "Measure across a fixed prompt set", text: "Answers vary by phrasing, session and region. Track the same prompts on a schedule, or you are reading noise." },
+    ],
     howItWorks: [
       "For questions that need current information, ChatGPT runs a search and reads the pages it retrieves before answering.",
       "Retrieved pages are summarised and often cited with links, so the source text directly shapes the wording of the answer.",
@@ -106,6 +132,18 @@ export const ENGINE_GUIDES: EngineGuide[] = [
     h1: "How to get your business cited in Perplexity.",
     intro:
       "Perplexity is retrieval-first by design: almost every answer is assembled from pages fetched at query time and shown with numbered citations. That makes it the most transparent engine to work with — you can see exactly which sources it used — and typically the quickest to reflect changes you make.",
+    answerBox: {
+      question: "How do I get cited by Perplexity?",
+      answer:
+        "Perplexity retrieves and cites on almost every query, which makes it the fastest engine to move: allow PerplexityBot, publish pages that answer one question each in their opening lines, keep the facts current and dated, and make sure the passage worth quoting sits near the top. Because it shows its sources, you can verify a win directly rather than inferring it. RankVyze tracks Perplexity citations per prompt and fixes what blocks them.",
+    },
+    steps: [
+      { name: "Allow PerplexityBot and Perplexity-User", text: "The first crawls for the index, the second fetches a page live during a conversation. Blocking either removes you from citations." },
+      { name: "Give each page one job", text: "Perplexity quotes passages, not pages. One question per page, answered in the first two sentences, is the format that gets lifted." },
+      { name: "Date your facts", text: "Perplexity favours current sources. An undated page loses to a dated one saying the same thing." },
+      { name: "Keep the quotable line above the fold", text: "The passage most likely to be cited is the one that resolves the question without context. Put it first." },
+      { name: "Check the citation, not the ranking", text: "Perplexity shows its sources. If you aren't in them for your own prompts, you have a direct, checkable signal of what to fix." },
+    ],
     howItWorks: [
       "Nearly every answer triggers a live search rather than relying on model memory.",
       "Retrieved pages are ranked, summarised and cited inline with visible source links.",
@@ -168,6 +206,18 @@ export const ENGINE_GUIDES: EngineGuide[] = [
     h1: "How to appear in Google AI Overviews and Gemini.",
     intro:
       "The most important thing to understand about AI Overviews is that they are generated from the same Search index that produces ordinary results. There is no separate AI index to get into. That makes this the one surface where good conventional SEO is not merely helpful but foundational — you generally cannot appear in an Overview for a query you cannot rank for at all.",
+    answerBox: {
+      question: "How do I appear in Google's AI Overviews?",
+      answer:
+        "AI Overviews are generated from Google's ordinary Search index, so appearing in them starts with ranking in classic organic results for the query — there is no separate submission or opt-in. On top of that, the pages pulled into an Overview tend to answer a specific question directly, carry clean structured data, and load fast. Do not block Google-Extended if you want to be included. RankVyze works the organic and the answer-shaped layer together, because on this engine they are the same job.",
+    },
+    steps: [
+      { name: "Rank organically first", text: "AI Overviews draw from the Search index. If you are not on page one for the query, you are not a candidate." },
+      { name: "Leave Google-Extended allowed", text: "Blocking it excludes you from Gemini and AI Overviews grounding while doing nothing for your organic ranking." },
+      { name: "Answer the question in the first 40 words", text: "Overviews assemble from passages that resolve a query directly. Preamble is not extracted." },
+      { name: "Ship clean structured data", text: "Organization, Product, FAQPage and HowTo where they genuinely apply. Markup for content the page doesn't show is a violation, not a shortcut." },
+      { name: "Fix Core Web Vitals", text: "Slow pages are crawled less and rendered less reliably, which quietly removes them from consideration." },
+    ],
     howItWorks: [
       "AI Overviews are assembled from pages already in Google's Search index, then summarised with links out.",
       "Being crawlable and indexable by Googlebot is the entry requirement; there is no separate opt-in for inclusion.",
@@ -230,6 +280,18 @@ export const ENGINE_GUIDES: EngineGuide[] = [
     h1: "How to get your business mentioned in Claude.",
     intro:
       "Claude names businesses more sparingly than the other engines, and hedges more readily toward criteria rather than recommendations. Its usage skews professional and enterprise, which changes the calculus: fewer mentions overall, but the people receiving them are disproportionately the ones making purchasing decisions.",
+    answerBox: {
+      question: "How do I get Claude to mention my business?",
+      answer:
+        "Claude names businesses sparingly and is comparatively cautious about recommending one, so the lever is credibility rather than volume: allow ClaudeBot and Claude-SearchBot, make claims that are specific and verifiable, and get corroborated by sources independent of your own domain. Unsupported superlatives are actively counterproductive here — a claim nothing backs is a claim Claude tends to leave out. RankVyze treats Claude as the engine where evidence quality, not content quantity, decides the outcome.",
+    },
+    steps: [
+      { name: "Allow ClaudeBot, Claude-User and Claude-SearchBot", text: "Three agents with different jobs — training, live fetch during a conversation, and search. Search is the one that decides visibility." },
+      { name: "Replace superlatives with specifics", text: "'The best agency in London' is unverifiable. 'Founded 2019, 40 staff, B Corp certified' is checkable, and checkable is what gets repeated." },
+      { name: "Build third-party corroboration", text: "Claude weighs what independent sources say about you far more heavily than what you say about yourself." },
+      { name: "Be consistent everywhere", text: "One name, one description, one address across every profile. Contradictions between sources read as uncertainty, and uncertainty reads as a reason to omit you." },
+      { name: "Publish something genuinely worth citing", text: "Original data, a real methodology, a documented result. Claude cites sources that add information rather than restate it." },
+    ],
     howItWorks: [
       "Claude can search the web when a question needs current information, and cites what it used.",
       "Without search, answers draw on training data — so widely-corroborated facts about your business carry further than recent site changes.",
@@ -293,6 +355,18 @@ export const ENGINE_GUIDES: EngineGuide[] = [
     h1: "How to get your business recommended in Microsoft Copilot.",
     intro:
       "Copilot's distinguishing feature is where it sits: inside Windows, Edge and Microsoft 365, in front of enterprise users during their working day. Its retrieval is grounded in the Bing index, which makes Bing indexing — a thing most teams neglect entirely — the foundation rather than an afterthought.",
+    answerBox: {
+      question: "How do I show up in Microsoft Copilot?",
+      answer:
+        "Copilot answers follow the Bing index, so the whole job is being indexed by Bing well and quickly: verify the site in Bing Webmaster Tools, submit your sitemap, and wire up IndexNow so new and changed pages are pushed to Bing within seconds instead of waiting for a crawl. Because Copilot ships inside Windows and Office, it reaches a desktop and enterprise audience the other engines don't. RankVyze sets up the Bing and IndexNow layer as part of the sprint.",
+    },
+    steps: [
+      { name: "Verify in Bing Webmaster Tools", text: "Bing indexes verified sites faster and tells you what it could not crawl. A ten-minute job with an outsized effect." },
+      { name: "Submit your sitemap to Bing", text: "Google Search Console does not feed Bing. This is a separate submission and it is frequently skipped." },
+      { name: "Implement IndexNow", text: "One POST per publish pushes changed URLs to Bing immediately. On a new domain this is the difference between days and weeks to first retrieval." },
+      { name: "Keep the same answer-shaped content", text: "Everything that helps ChatGPT retrieval helps here. The engine differs; the readable, direct, well-marked-up page does not." },
+      { name: "Watch enterprise-shaped queries", text: "Copilot's audience skews to work tasks. Prompts about procurement, compliance and tooling matter more here than consumer phrasing." },
+    ],
     howItWorks: [
       "Answers are grounded in Bing's web index, so Bing indexing is the entry requirement.",
       "Retrieved pages are summarised with citations back to sources.",

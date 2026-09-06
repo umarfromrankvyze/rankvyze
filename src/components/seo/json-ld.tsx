@@ -196,6 +196,46 @@ export function ArticleJsonLd({
 }
 
 /** Breadcrumbs for the content pages, so crawlers see the hierarchy. */
+/**
+ * HowTo node for the engine guides.
+ *
+ * "How do I get ranked on ChatGPT" is a procedural query, and HowTo is the
+ * schema type built for exactly that shape. Every step below is rendered on
+ * the page — markup describing steps a visitor cannot see is a violation, not
+ * a shortcut.
+ */
+export function HowToJsonLd({
+  path,
+  name,
+  description,
+  steps,
+}: {
+  path: string;
+  name: string;
+  description: string;
+  steps: { name: string; text: string }[];
+}) {
+  return (
+    <JsonLd
+      data={{
+        "@context": "https://schema.org",
+        "@type": "HowTo",
+        "@id": `${SITE_URL}${path}#howto`,
+        name,
+        description,
+        isPartOf: { "@id": SITE_ID },
+        step: steps.map((s, i) => ({
+          "@type": "HowToStep",
+          position: i + 1,
+          name: s.name,
+          text: s.text,
+          url: `${SITE_URL}${path}#step-${i + 1}`,
+        })),
+      }}
+    />
+  );
+}
+
 export function BreadcrumbJsonLd({ trail }: { trail: { name: string; path: string }[] }) {
   return (
     <JsonLd

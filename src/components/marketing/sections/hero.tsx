@@ -23,8 +23,15 @@ export function Hero() {
             45-day AI visibility guarantee
           </p>
 
-          <h1 className="animate-fade-up mt-6 text-balance font-display text-[2.6rem] font-extrabold leading-[1.04] tracking-[-0.04em] text-ink [animation-delay:80ms] sm:text-[3.4rem] md:text-[4.4rem]">
-            We rank your business in <span className="text-brand-500">ChatGPT, Gemini &amp; Claude.</span>
+          {/* The category leads. Our own scanner flagged the previous H1 —
+              "We rank your business in ChatGPT, Gemini & Claude." — as a
+              slogan: it stated an outcome but never said what RankVyze is, so
+              a model had nothing to attach the brand to when someone asks for
+              an answer engine optimization service. The promise is unchanged;
+              it now sits behind the category rather than instead of it. */}
+          <h1 className="animate-fade-up mt-6 text-balance font-display text-[2.4rem] font-extrabold leading-[1.05] tracking-[-0.04em] text-ink [animation-delay:80ms] sm:text-[3.1rem] md:text-[3.9rem]">
+            Answer engine optimization that ranks your business in{" "}
+            <span className="text-brand-500">ChatGPT, Gemini &amp; Claude.</span>
           </h1>
 
           <p className="animate-fade-up mx-auto mt-6 max-w-2xl text-pretty text-[17px] leading-relaxed text-ink-muted [animation-delay:160ms] md:text-[19px]">

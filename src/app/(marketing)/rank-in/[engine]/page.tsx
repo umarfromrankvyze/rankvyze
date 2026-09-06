@@ -9,7 +9,7 @@ import { Reveal } from "@/components/shared/reveal";
 import { ScanForm } from "@/components/marketing/scan-form";
 import { FinalCta } from "@/components/marketing/sections/cta";
 import { EngineIcon } from "@/components/ui/engine-icon";
-import { BreadcrumbJsonLd, FaqJsonLd, PageJsonLd } from "@/components/seo/json-ld";
+import { BreadcrumbJsonLd, FaqJsonLd, HowToJsonLd, PageJsonLd } from "@/components/seo/json-ld";
 import { ENGINE_GUIDES, getEngineGuide } from "@/content/engines";
 import { GUARANTEE_DAYS, GUARANTEE_MIN_ENGINES } from "@/lib/guarantee";
 
@@ -50,6 +50,7 @@ export default async function EngineGuidePage({ params }: { params: Promise<{ en
     <>
       <PageJsonLd path={path} name={data.metaTitle} description={data.metaDescription} />
       <FaqJsonLd path={path} items={data.faq} />
+      <HowToJsonLd path={path} name={data.answerBox.question} description={data.answerBox.answer} steps={data.steps} />
       <BreadcrumbJsonLd
         trail={[
           { name: "Home", path: "/" },
@@ -73,9 +74,50 @@ export default async function EngineGuidePage({ params }: { params: Promise<{ en
             align="left"
             className="mt-5 max-w-3xl"
           />
+          {/* Answer-first. An engine extracts the passage that resolves the
+              question without needing the paragraph before it, so this is
+              written to stand alone and sits above everything else. */}
+          <Reveal delay={60} className="mt-8 max-w-3xl">
+            <div className="rounded-2xl border border-brand-200 bg-brand-50/40 p-6 md:p-7">
+              <h2 className="font-display text-[17px] font-bold tracking-tight text-ink">{data.answerBox.question}</h2>
+              <p className="mt-3 text-[15.5px] leading-[1.75] text-ink">{data.answerBox.answer}</p>
+            </div>
+          </Reveal>
+
           <Reveal delay={80} className="mt-8 max-w-xl">
             <ScanForm size="md" />
           </Reveal>
+        </div>
+      </Section>
+
+      {/* Steps — rendered because the HowTo markup describes them. Schema for
+          steps a visitor cannot see is a violation, not a shortcut. */}
+      <Section className="py-14 md:py-18">
+        <div className="container-x">
+          <SectionHeading
+            eyebrow="The work"
+            title={`What actually gets you into ${data.name}.`}
+            description="In order. Each step is a thing you can check off, not a principle to keep in mind."
+            align="left"
+            className="max-w-2xl"
+          />
+          <ol className="mt-8 max-w-3xl space-y-3">
+            {data.steps.map((step, i) => (
+              <li key={step.name} id={`step-${i + 1}`}>
+                <Reveal delay={(i % 3) * 50}>
+                  <div className="flex gap-4 rounded-xl border border-line bg-white p-5">
+                    <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-500/10 font-mono text-[12px] font-semibold text-brand-600">
+                      {i + 1}
+                    </span>
+                    <div>
+                      <h3 className="font-display text-[15.5px] font-semibold text-ink">{step.name}</h3>
+                      <p className="mt-1 text-[14.5px] leading-relaxed text-ink-muted">{step.text}</p>
+                    </div>
+                  </div>
+                </Reveal>
+              </li>
+            ))}
+          </ol>
         </div>
       </Section>
 

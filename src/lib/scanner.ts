@@ -187,8 +187,17 @@ const GENERIC_DESCRIPTIONS = [
 ];
 
 /** Words that tell a model what kind of business this is. */
+/**
+ * Words that make an H1 describe a category rather than assert a feeling.
+ *
+ * Deliberately broad. The first version recognised plumbers and dentists but
+ * not engineers, recruiters, analysts or anything software-adjacent, which
+ * meant it told a whole class of legitimate business that a perfectly
+ * descriptive H1 "reads as a slogan". A false warning is worse than a missed
+ * one here — it sends someone off to rewrite a headline that was fine.
+ */
 const CATEGORY_HINTS =
-  /\b(agency|studio|consultancy|consulting|software|platform|app|saas|shop|store|clinic|dentist|dental|law|legal|lawyer|attorney|accountant|accounting|marketing|design|development|developer|builder|manufacturer|supplier|restaurant|cafe|hotel|salon|gym|fitness|school|academy|training|insurance|bank|finance|realty|real estate|property|logistics|freight|repair|service|services|solutions|company|firm|practice|contractor|plumber|electrician|photographer|therapist|coach)\b/i;
+  /\b(agency|studio|consultancy|consulting|advisory|software|platform|app|saas|shop|store|clinic|dentist|dental|law|legal|lawyer|attorney|accountant|accounting|bookkeeping|marketing|advertising|media|design|development|developer|engineering|engineer|builder|manufacturer|supplier|wholesaler|distributor|restaurant|cafe|catering|hotel|hospitality|salon|spa|gym|fitness|wellness|school|academy|tutoring|training|courses|insurance|bank|finance|financial|lending|mortgage|realty|real estate|property|lettings|logistics|freight|shipping|removals|repair|maintenance|service|services|solutions|company|firm|practice|contractor|plumber|electrician|roofing|hvac|landscaping|cleaning|security|photographer|videographer|therapist|therapy|counselling|veterinary|childcare|recruitment|staffing|recruiter|analytics|optimization|optimisation|seo|ecommerce|e-commerce|retailer|nonprofit|charity)\b/i;
 
 export async function scanUrl(rawUrl: string): Promise<ScanResult> {
   let target: URL;
