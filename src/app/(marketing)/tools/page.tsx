@@ -105,6 +105,26 @@ export default function ToolsHubPage() {
             </Reveal>
           </div>
 
+          <div className="mx-auto mt-10 max-w-4xl">
+            <Link
+              href="/best-ai-seo-tools"
+              className="group flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-line bg-white p-6 transition-colors hover:border-ink/25"
+            >
+              <span className="min-w-0">
+                <span className="block font-display text-[17px] font-bold tracking-tight text-ink">
+                  Looking for a paid AI visibility tool?
+                </span>
+                <span className="mt-1.5 block text-[14.5px] leading-relaxed text-ink-muted">
+                  We compared nine of them with sourced prices, from $29/mo to $800/mo — including where we&rsquo;re the
+                  wrong choice.
+                </span>
+              </span>
+              <span className="inline-flex shrink-0 items-center gap-1.5 text-[14px] font-medium text-ink group-hover:text-brand-600">
+                Read the comparison <ArrowUpRight className="size-4" />
+              </span>
+            </Link>
+          </div>
+
           {/* Saying plainly what we did not build, and why. */}
           <div className="mx-auto mt-14 max-w-4xl">
             <div className="rounded-2xl border border-line bg-surface-2 p-7">

@@ -266,6 +266,12 @@ export function getTool(slug: string) {
  * Asked for, and deliberately absent. Shown on the hub so the omission reads as
  * a decision rather than an oversight — and so nobody wastes time looking.
  */
+export const COMPARISON_LINK = {
+  href: "/best-ai-seo-tools",
+  label: "Compare every AI visibility tool",
+  note: "Sourced prices for nine tools, and an honest account of where each one fits.",
+};
+
 export const NOT_BUILT = [
   {
     name: "Backlink checker",

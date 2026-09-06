@@ -14,6 +14,7 @@ const PAGES = [
   "/",
   "/pricing",
   "/tools",
+  "/best-ai-seo-tools",
   "/tools/ai-visibility-checker",
   "/rank-in/chatgpt",
   "/glossary/answer-engine-optimization",
