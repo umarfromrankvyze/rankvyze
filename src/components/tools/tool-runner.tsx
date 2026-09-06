@@ -1,13 +1,23 @@
 "use client";
 
-import { useActionState } from "react";
-import { ArrowRight, Check, Info, Loader2, TriangleAlert, X } from "lucide-react";
+import { useActionState, useState } from "react";
+import { ArrowRight, Check, Copy, Info, Loader2, TriangleAlert, X } from "lucide-react";
 import type { CrawlerReport } from "@/lib/tools/crawlers";
 import type { DomainAgeReport } from "@/lib/tools/domain-age";
 import type { MetaReport } from "@/lib/tools/meta";
 import type { SchemaReport } from "@/lib/tools/schema";
 import type { VisibilityReport } from "@/lib/tools/visibility";
-import { runCrawlerCheck, runDomainAgeCheck, runMetaCheck, runSchemaCheck, runVisibilityCheck } from "@/server/actions/tools";
+import type { RenderingReport } from "@/lib/tools/rendering";
+import type { LlmsTxtReport } from "@/lib/tools/llms-txt";
+import {
+  runCrawlerCheck,
+  runDomainAgeCheck,
+  runLlmsTxtGenerate,
+  runMetaCheck,
+  runRenderingCheck,
+  runSchemaCheck,
+  runVisibilityCheck,
+} from "@/server/actions/tools";
 import { initialActionState, type ActionResult } from "@/server/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,11 +31,20 @@ import { cn } from "@/lib/utils";
  * domain lookup is a record, a meta check is a preview.
  */
 
-type Slug = "ai-visibility-checker" | "ai-crawler-checker" | "schema-markup-checker" | "meta-tag-checker" | "domain-age-checker";
+type Slug =
+  | "ai-visibility-checker"
+  | "ai-crawler-checker"
+  | "schema-markup-checker"
+  | "meta-tag-checker"
+  | "domain-age-checker"
+  | "what-ai-crawlers-see"
+  | "llms-txt-generator";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- one map, four differently-shaped reports
 const ACTIONS: Record<Slug, any> = {
   "ai-visibility-checker": runVisibilityCheck,
+  "what-ai-crawlers-see": runRenderingCheck,
+  "llms-txt-generator": runLlmsTxtGenerate,
   "ai-crawler-checker": runCrawlerCheck,
   "schema-markup-checker": runSchemaCheck,
   "meta-tag-checker": runMetaCheck,
@@ -72,6 +91,8 @@ export function ToolRunner({ slug, placeholder, action }: { slug: Slug; placehol
       {state.ok && state.data !== undefined && (
         <div className="mt-8">
           {slug === "ai-visibility-checker" && <VisibilityResult report={state.data as VisibilityReport} />}
+          {slug === "what-ai-crawlers-see" && <RenderingResult report={state.data as RenderingReport} />}
+          {slug === "llms-txt-generator" && <LlmsTxtResult report={state.data as LlmsTxtReport} />}
           {slug === "ai-crawler-checker" && <CrawlerResult report={state.data as CrawlerReport} />}
           {slug === "schema-markup-checker" && <SchemaResult report={state.data as SchemaReport} />}
           {slug === "meta-tag-checker" && <MetaResult report={state.data as MetaReport} />}
@@ -448,6 +469,144 @@ function VisibilityResult({ report }: { report: VisibilityReport }) {
           <Row label="Location" value={entity.location ?? <span className="text-ink-faint">not stated</span>} />
           <Row label="Page checked" value={<span className="break-all">{report.finalUrl}</span>} />
         </dl>
+      </Panel>
+    </div>
+  );
+}
+
+// --- what AI crawlers see ------------------------------------------------
+
+function RenderingResult({ report }: { report: RenderingReport }) {
+  const tone =
+    report.verdict === "server-rendered"
+      ? { ring: "border-green-200 bg-success-soft", label: "Server-rendered", text: "text-green-800" }
+      : report.verdict === "partial"
+        ? { ring: "border-amber-200 bg-warning-soft", label: "Partially rendered", text: "text-amber-800" }
+        : { ring: "border-red-200 bg-danger-soft", label: "JavaScript-dependent", text: "text-red-800" };
+
+  return (
+    <div>
+      <div className={cn("rounded-2xl border p-5", tone.ring)}>
+        <p className={cn("text-[12px] font-semibold uppercase tracking-[0.08em]", tone.text)}>{tone.label}</p>
+        <p className="mt-2 text-[15.5px] leading-relaxed text-ink">{report.summary}</p>
+      </div>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-4">
+        {[
+          { label: "Words", value: report.words.toLocaleString() },
+          { label: "Headings", value: report.headings.length },
+          { label: "Internal links", value: report.internalLinks },
+          { label: "Script share", value: `${Math.round(report.scriptShare * 100)}%` },
+        ].map((stat) => (
+          <div key={stat.label} className="rounded-xl border border-line bg-white p-4">
+            <p className="text-[11.5px] font-semibold uppercase tracking-[0.06em] text-ink-faint">{stat.label}</p>
+            <p className="mt-1.5 font-display text-[22px] font-bold tabular-nums text-ink">{stat.value}</p>
+          </div>
+        ))}
+      </div>
+
+      <Panel title="Signals" note="Evidence, not a verdict">
+        <ul className="space-y-3">
+          {report.signals.map((sig) => (
+            <li key={sig.label} className="flex items-start gap-3">
+              {sig.found ? (
+                <Check className="mt-0.5 size-4 shrink-0 text-green-600" />
+              ) : (
+                <X className="mt-0.5 size-4 shrink-0 text-ink-faint" />
+              )}
+              <div className="min-w-0">
+                <p className="text-[14px] font-semibold text-ink">{sig.label}</p>
+                <p className="mt-0.5 text-[13.5px] leading-relaxed text-ink-muted">{sig.detail}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </Panel>
+
+      {report.headings.length > 0 && (
+        <Panel title="Headings a crawler can read">
+          <ul className="space-y-1.5">
+            {report.headings.map((h, i) => (
+              <li key={i} className="flex items-baseline gap-2.5 text-[13.5px]">
+                <span className="shrink-0 font-mono text-[11.5px] text-ink-faint">H{h.level}</span>
+                <span className="min-w-0 truncate text-ink-muted">{h.text}</span>
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      )}
+
+      <Panel title="The text a crawler actually receives" note="Straight from the HTML, no JavaScript run">
+        <div className="max-h-80 overflow-auto rounded-xl border border-line bg-surface-2 p-4">
+          <p className="whitespace-pre-wrap text-[13px] leading-[1.7] text-ink-muted">
+            {report.text || "(nothing — the page returned no readable text without JavaScript)"}
+          </p>
+        </div>
+        <p className="mt-3 text-[12.5px] leading-relaxed text-ink-faint">
+          Compare this against what you see in a browser. Anything present there and missing here is invisible to
+          crawlers that don&rsquo;t execute JavaScript — which is most of them.
+        </p>
+      </Panel>
+    </div>
+  );
+}
+
+// --- llms.txt generator --------------------------------------------------
+
+function LlmsTxtResult({ report }: { report: LlmsTxtReport }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(report.content);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard can be blocked; the text below is selectable.
+    }
+  };
+
+  return (
+    <div>
+      <div className="rounded-2xl border border-line bg-surface-2 p-5">
+        <p className="text-[15px] font-semibold text-ink">
+          {report.existing.found
+            ? `${report.siteName} already publishes an llms.txt.`
+            : `Draft llms.txt for ${report.siteName}`}
+        </p>
+        <p className="mt-1 text-[13px] text-ink-muted">
+          {report.sitemapUrl
+            ? `Built from ${report.urlsFound.toLocaleString()} URLs in ${report.sitemapUrl}`
+            : "No sitemap found — the page list is minimal."}
+          {report.existing.found && ` Compare against ${report.existing.url} before replacing it.`}
+        </p>
+      </div>
+
+      <div className="mt-4 flex items-center justify-between gap-3">
+        <p className="text-[13px] font-semibold text-ink">Your file</p>
+        <Button type="button" variant="outline" size="sm" onClick={copy}>
+          {copied ? <Check /> : <Copy />} {copied ? "Copied" : "Copy"}
+        </Button>
+      </div>
+      <div className="mt-3 max-h-[28rem] overflow-auto rounded-2xl border border-ink/10 bg-ink p-5">
+        <pre className="text-[12.5px] leading-[1.7] text-white/90">
+          <code>{report.content}</code>
+        </pre>
+      </div>
+
+      <Panel title="Before you publish it">
+        <ul className="space-y-2.5">
+          {report.notes.map((note, i) => (
+            <li key={i} className="flex items-start gap-2.5 text-[13.5px] leading-relaxed text-ink-muted">
+              <Info className="mt-0.5 size-4 shrink-0 text-ink-faint" />
+              {note}
+            </li>
+          ))}
+          <li className="flex items-start gap-2.5 text-[13.5px] leading-relaxed text-ink-muted">
+            <Info className="mt-0.5 size-4 shrink-0 text-ink-faint" />
+            Save it at <span className="font-mono text-[12.5px] text-ink">{report.origin}/llms.txt</span> and serve it as
+            <span className="font-mono text-[12.5px] text-ink"> text/plain</span>.
+          </li>
+        </ul>
       </Panel>
     </div>
   );

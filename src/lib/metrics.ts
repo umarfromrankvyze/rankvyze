@@ -4,6 +4,8 @@
  * write identical rows, so nothing in this module knows or cares which.
  */
 
+import { POSITION_CREDIT, POSITION_CREDIT_FLOOR, WEIGHT_TABLE } from "@/lib/metrics-public";
+
 export interface ResearchLike {
   promptId: string;
   engineKey: string;
@@ -29,13 +31,14 @@ export interface VisibilitySummary {
   queriesLost: number;
 }
 
-const WEIGHTS = { mention: 0.5, citation: 0.3, position: 0.2 } as const;
+// Read from the shared module so /ai-search-visibility, which documents this
+// formula publicly, cannot drift from the code that computes the real score.
+const WEIGHTS = WEIGHT_TABLE;
 
 /** 1st mention is worth full credit; credit decays quickly after the top 3. */
 export function positionScore(position: number | null): number {
   if (!position || position < 1) return 0;
-  const table = [1, 0.85, 0.7, 0.55, 0.4];
-  return table[position - 1] ?? 0.25;
+  return POSITION_CREDIT[position - 1] ?? POSITION_CREDIT_FLOOR;
 }
 
 /**

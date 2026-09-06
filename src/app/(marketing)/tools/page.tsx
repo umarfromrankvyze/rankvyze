@@ -6,8 +6,14 @@ import { Reveal } from "@/components/shared/reveal";
 import { FinalCta } from "@/components/marketing/sections/cta";
 import { Button } from "@/components/ui/button";
 import { BreadcrumbJsonLd, PageJsonLd } from "@/components/seo/json-ld";
-import { NOT_BUILT, TOOLS } from "@/content/tools";
+import { NOT_BUILT, TOOLS, type ToolGroup } from "@/content/tools";
 import { SITE_URL } from "@/lib/site";
+
+const GROUP_NOTE: Record<ToolGroup, string> = {
+  Diagnose: "find out what's wrong",
+  Generate: "produce the file or markup",
+  "Look up": "check a fact",
+};
 
 const TITLE = "Free SEO & AEO Tools";
 const DESCRIPTION =
@@ -70,24 +76,43 @@ export default function ToolsHubPage() {
 
       <Section className="pb-16 pt-0 md:pb-20">
         <div className="container-x">
-          <div className="mx-auto grid max-w-4xl gap-4 sm:grid-cols-2">
-            {TOOLS.map((tool, i) => (
-              <Reveal key={tool.slug} delay={i * 60}>
-                <Link
-                  href={`/tools/${tool.slug}`}
-                  className="group flex h-full flex-col rounded-2xl border border-line bg-white p-7 shadow-card transition-all hover:-translate-y-0.5 hover:shadow-lift"
-                >
-                  <h2 className="font-display text-[19px] font-bold tracking-tight text-ink">{tool.name}</h2>
-                  <p className="mt-2.5 flex-1 text-[14.5px] leading-relaxed text-ink-muted">{tool.blurb}</p>
-                  <span className="mt-5 inline-flex items-center gap-1.5 text-[14px] font-medium text-ink group-hover:text-brand-600">
-                    Open tool <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                  </span>
-                </Link>
-              </Reveal>
-            ))}
+          {/* Grouped by verb. Eight tools in one flat grid stops being
+              scannable — the shelf label is what tells someone which half of
+              the page to read. */}
+          <div className="mx-auto max-w-4xl space-y-12">
+            {(["Diagnose", "Generate", "Look up"] as ToolGroup[]).map((group) => {
+              const items = TOOLS.filter((t) => t.group === group);
+              if (items.length === 0) return null;
+              return (
+                <div key={group}>
+                  <h2 className="text-[12px] font-semibold uppercase tracking-[0.1em] text-ink-faint">
+                    {group}
+                    <span className="ml-2 font-normal normal-case tracking-normal text-ink-faint/70">
+                      {GROUP_NOTE[group]}
+                    </span>
+                  </h2>
+                  <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                    {items.map((tool, i) => (
+                      <Reveal key={tool.slug} delay={i * 60}>
+                        <Link
+                          href={`/tools/${tool.slug}`}
+                          className="group flex h-full flex-col rounded-2xl border border-line bg-white p-7 shadow-card transition-all hover:-translate-y-0.5 hover:shadow-lift"
+                        >
+                          <h3 className="font-display text-[19px] font-bold tracking-tight text-ink">{tool.name}</h3>
+                          <p className="mt-2.5 flex-1 text-[14.5px] leading-relaxed text-ink-muted">{tool.blurb}</p>
+                          <span className="mt-5 inline-flex items-center gap-1.5 text-[14px] font-medium text-ink group-hover:text-brand-600">
+                            Open tool <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                          </span>
+                        </Link>
+                      </Reveal>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
 
-            {/* The paid scan sits alongside them, labelled for what it is. */}
-            <Reveal delay={TOOLS.length * 60} className="sm:col-span-2">
+            {/* The full scan sits below the shelves, labelled for what it is. */}
+            <Reveal delay={120}>
               <div className="flex flex-col justify-between gap-5 rounded-2xl border border-brand-500/30 bg-brand-50/50 p-7 sm:flex-row sm:items-center">
                 <div className="min-w-0">
                   <h2 className="font-display text-[19px] font-bold tracking-tight text-ink">AEO Scanner</h2>

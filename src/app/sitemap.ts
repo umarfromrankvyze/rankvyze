@@ -32,6 +32,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: "/rank-in", priority: 0.85, freq: "monthly" },
     { path: "/ai-brand-mentions", priority: 0.9, freq: "monthly" },
     { path: "/generative-engine-optimization", priority: 0.9, freq: "monthly" },
+    { path: "/ai-search-visibility", priority: 0.9, freq: "monthly" },
+    { path: "/ai-visibility-tools", priority: 0.85, freq: "monthly" },
     { path: "/glossary", priority: 0.7, freq: "monthly" },
     { path: "/resources", priority: 0.6, freq: "monthly" },
     { path: "/contact", priority: 0.5, freq: "yearly" },

@@ -233,8 +233,11 @@ export default function BrandMentionsPage() {
             </table>
           </div>
           <p className="mt-4 text-[12.5px] text-ink-faint">
-            Checked {RESEARCHED_ON}. Pricing is only quoted where a vendor publishes it. Tell us if anything here is out
-            of date and we&apos;ll correct it.
+            Checked {RESEARCHED_ON}. Pricing is only quoted where a vendor publishes it.{" "}
+            <Link href="/ai-visibility-tools" className="font-medium text-ink underline underline-offset-2">
+              Full comparison with verified pricing and cost per tracked prompt
+            </Link>
+            .
           </p>
         </div>
       </Section>

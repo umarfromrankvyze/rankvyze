@@ -13,8 +13,14 @@
  * an API key exists; see /tools for how we say this to visitors.
  */
 
+export type ToolGroup = "Diagnose" | "Generate" | "Look up";
+
 export interface ToolDef {
   slug: string;
+  /** Which shelf on the hub. Eight tools in one grid stops being scannable. */
+  group: ToolGroup;
+  /** "url" takes an address; "form" is a builder with no fetch. */
+  input?: "url" | "form";
   /** Nav and card label. */
   name: string;
   /** H1. */
@@ -40,7 +46,142 @@ export interface ToolDef {
 
 export const TOOLS: ToolDef[] = [
   {
+    slug: "what-ai-crawlers-see",
+    group: "Diagnose",
+    name: "What AI Crawlers See",
+    heading: "See your page the way an AI crawler does.",
+    seoTitle: "What AI Crawlers See: Free JS Render Check",
+    description:
+      "Fetch any page without JavaScript and read exactly what a crawler gets. If your content only appears after hydration, most AI crawlers never see it.",
+    blurb: "Fetches your page with JavaScript off and shows the text, headings and links a crawler actually receives.",
+    placeholder: "yoursite.com",
+    action: "Show me",
+    bullets: [
+      "The real text a non-JavaScript crawler reads, in full",
+      "Headings and internal links discoverable without hydration",
+      "Signals that your content depends on JavaScript — reported as evidence, not a guess",
+    ],
+    targets: [
+      "what does googlebot see",
+      "javascript seo checker",
+      "check if my site renders without javascript",
+      "does chatgpt see my content",
+      "server side rendering checker",
+    ],
+    faq: [
+      {
+        q: "Do AI crawlers run JavaScript?",
+        a: "Mostly not. Googlebot renders JavaScript on a delay, but GPTBot, OAI-SearchBot, PerplexityBot and ClaudeBot largely read the HTML your server returns. If your content is assembled in the browser, it may never reach them.",
+      },
+      {
+        q: "Does this render the page in a browser and compare?",
+        a: "No, and it says so. Rendering needs a headless browser, which won't run in a serverless function — so rather than fake a comparison, this shows exactly what the non-JavaScript fetch returned and reports the signals that suggest the rest depends on JavaScript.",
+      },
+      {
+        q: "How much text should be in the raw HTML?",
+        a: "Enough to say what the page is. A few dozen words on a page that looks full in a browser is the classic client-rendering problem. Several hundred words means a crawler has something real to work with.",
+      },
+      {
+        q: "How do I fix a JavaScript-dependent page?",
+        a: "Server-render it. In Next.js that means a server component or static generation; in most frameworks there is an SSR or prerender mode. The goal is that the HTML your server returns already contains the words you want read.",
+      },
+    ],
+    related: ["ai-visibility-checker", "ai-crawler-checker"],
+  },
+  {
+    slug: "llms-txt-generator",
+    group: "Generate",
+    name: "llms.txt Generator",
+    heading: "Generate an llms.txt for your site.",
+    seoTitle: "Free llms.txt Generator",
+    description:
+      "Reads your homepage and sitemap and drafts a complete llms.txt — the file that tells AI systems what your site is and which pages matter. Free, no signup.",
+    blurb: "Reads your homepage and sitemap, then drafts the whole file from what your site already publishes.",
+    placeholder: "yoursite.com",
+    action: "Generate",
+    bullets: [
+      "Built from your own title, description, Organization schema and sitemap",
+      "Pages grouped by what they are, not by sitemap order",
+      "Tells you whether you already publish one, and what it would replace",
+    ],
+    targets: [
+      "llms.txt generator",
+      "create llms.txt",
+      "llms txt file generator",
+      "how to make an llms.txt",
+      "llms.txt example",
+    ],
+    faq: [
+      {
+        q: "What is llms.txt?",
+        a: "A plain-Markdown file at your site root that tells AI systems what your site is and which pages are worth reading. robots.txt controls access; llms.txt provides context. It's a community proposal, not a ratified standard.",
+      },
+      {
+        q: "Do ChatGPT and Perplexity actually read it?",
+        a: "Neither has confirmed that they do. The honest case for adding one is that it costs twenty minutes, several AEO audits check for it, and writing it forces you to state plainly what your business is — which is the real work anyway.",
+      },
+      {
+        q: "Is the generated file ready to publish?",
+        a: "It's a draft. Everything in it comes from your own site, so nothing is invented — but the one-line descriptions after each link are generic, and rewriting them in your own words is the point of the file.",
+      },
+      {
+        q: "Where do I put it?",
+        a: "At your domain root — yoursite.com/llms.txt — served as text/plain. If your site is code, generate it from the same values that drive your pages so it can't drift.",
+      },
+    ],
+    related: ["ai-crawler-checker", "schema-markup-generator"],
+  },
+  {
+    slug: "schema-markup-generator",
+    group: "Generate",
+    input: "form",
+    name: "Schema Markup Generator",
+    heading: "Generate the schema that makes you identifiable.",
+    seoTitle: "Free Schema Markup Generator (JSON-LD)",
+    description:
+      "Generate valid JSON-LD for Organization, LocalBusiness, Service and FAQPage — the four types that decide whether an AI engine can tell what your business is.",
+    blurb: "Fill in a form, get valid JSON-LD for the four schema types that actually decide how an engine identifies you.",
+    placeholder: "",
+    action: "",
+    bullets: [
+      "Organization, LocalBusiness, Service and FAQPage — the four that matter",
+      "@id linking built in, so your blocks describe one business rather than several",
+      "Runs entirely in your browser; nothing you type is sent anywhere",
+    ],
+    targets: [
+      "schema markup generator",
+      "json-ld generator",
+      "organization schema generator",
+      "faq schema generator",
+      "local business schema generator",
+    ],
+    faq: [
+      {
+        q: "Which schema types should I use?",
+        a: "Organization site-wide is the floor — it's what tells an engine who you are. Then Service or Product on offering pages, and FAQPage where you have real question and answer content on the page. Four types covers almost everything that matters for AI search.",
+      },
+      {
+        q: "Why does @id linking matter?",
+        a: "Without it a parser sees several unrelated things instead of one business described several ways. This generator builds the Organization @id from your URL and references it from Service, so the blocks resolve to one entity.",
+      },
+      {
+        q: "Where do I put the generated code?",
+        a: "In the <head> of the relevant page, server-rendered. Schema injected after hydration may never be seen by crawlers that don't run JavaScript.",
+      },
+      {
+        q: "Can I mark up FAQs that aren't visible on the page?",
+        a: "No. Structured data must reflect content a human can see. Marking up hidden FAQs violates search guidelines and gains nothing, because the visible text is what gets quoted.",
+      },
+      {
+        q: "Is my data sent to your server?",
+        a: "No. This generator runs entirely in your browser — there is no request to build the JSON-LD, and nothing you type leaves the page.",
+      },
+    ],
+    related: ["schema-markup-checker", "llms-txt-generator"],
+  },
+  {
     slug: "ai-visibility-checker",
+    group: "Diagnose",
     name: "AI Visibility Checker",
     heading: "Are you ready to be recommended by AI engines?",
     seoTitle: "Free AI Visibility Checker",
@@ -88,6 +229,7 @@ export const TOOLS: ToolDef[] = [
   },
   {
     slug: "ai-crawler-checker",
+    group: "Diagnose",
     name: "AI Crawler Checker",
     heading: "Can AI crawlers actually reach your site?",
     seoTitle: "Free AI Crawler & robots.txt Checker",
@@ -130,6 +272,7 @@ export const TOOLS: ToolDef[] = [
   },
   {
     slug: "schema-markup-checker",
+    group: "Diagnose",
     name: "Schema Checker",
     heading: "What does your structured data actually say?",
     seoTitle: "Free Schema Markup & JSON-LD Checker",
@@ -172,6 +315,7 @@ export const TOOLS: ToolDef[] = [
   },
   {
     slug: "meta-tag-checker",
+    group: "Diagnose",
     name: "Meta Tag Checker",
     heading: "See your page the way Google and AI crawlers see it.",
     seoTitle: "Free Meta Tag & SERP Preview Checker",
@@ -214,6 +358,7 @@ export const TOOLS: ToolDef[] = [
   },
   {
     slug: "domain-age-checker",
+    group: "Look up",
     name: "Domain Age Checker",
     heading: "How old is that domain?",
     seoTitle: "Free Domain Age Checker (RDAP)",

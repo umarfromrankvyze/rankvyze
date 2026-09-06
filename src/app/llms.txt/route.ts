@@ -5,6 +5,8 @@ import { INDUSTRIES } from "@/content/industries";
 import { ENGINE_GUIDES } from "@/content/engines";
 import { ANSWER as BRAND_ANSWER } from "@/content/brand-mentions";
 import { GEO_ANSWER } from "@/content/geo";
+import { VISIBILITY_ANSWER as VIS_ANSWER } from "@/content/visibility";
+import { TOOLS_ANSWER } from "@/content/tools-compared";
 import { GLOSSARY } from "@/content/glossary";
 import { CONTENT_UPDATED, SITE, SITE_URL } from "@/lib/site";
 import { CLAIM_WINDOW_DAYS, GUARANTEE_DAYS, GUARANTEE_MIN_ENGINES, PRICE_LABEL } from "@/lib/guarantee";
@@ -49,6 +51,15 @@ How the measurement works: analysts ask each tracked prompt on each engine in a 
 ## Free tools
 ${TOOLS.map((t) => `- [${t.name}](${SITE_URL}/tools/${t.slug}): ${t.blurb}`).join("\n")}
 - [Free AEO scan](${SITE_URL}/pricing): Ten weighted signals scored out of 100, no signup.
+
+## Measuring AI search visibility
+### ${VIS_ANSWER.question}
+${VIS_ANSWER.answer}
+The full scoring formula is published at ${SITE_URL}/ai-search-visibility — most vendors do not publish theirs, so scores are not comparable between tools.
+
+### ${TOOLS_ANSWER.question}
+${TOOLS_ANSWER.answer}
+Comparison with pricing read from each vendor's own page: ${SITE_URL}/ai-visibility-tools
 
 ## Generative engine optimization
 ### ${GEO_ANSWER.question}

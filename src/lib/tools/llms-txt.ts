@@ -53,11 +53,45 @@ const BUCKETS: { title: string; test: RegExp; note: string; limit: number }[] = 
 
 const SKIP = /\/(tag|tags|category|categories|author|page|search|cart|checkout|account|login|signup|admin|api|wp-|feed|amp)(\/|$)|\.(xml|json|pdf|jpg|png|gif|webp|css|js)$/i;
 
+/**
+ * Names that naive title-casing gets wrong.
+ *
+ * Slugs are lowercase, so "how-to-rank-on-chatgpt" becomes "How To Rank On
+ * Chatgpt". A visibly mis-capitalised brand in a file we generated reads as
+ * careless, and these are the terms most likely to appear in a slug on the
+ * kind of site that uses this tool.
+ */
+const BRAND_CASE: Record<string, string> = {
+  chatgpt: "ChatGPT",
+  openai: "OpenAI",
+  gpt: "GPT",
+  ai: "AI",
+  seo: "SEO",
+  aeo: "AEO",
+  geo: "GEO",
+  llm: "LLM",
+  llms: "LLMs",
+  api: "API",
+  saas: "SaaS",
+  b2b: "B2B",
+  b2c: "B2C",
+  ui: "UI",
+  ux: "UX",
+  faq: "FAQ",
+  ios: "iOS",
+  css: "CSS",
+  html: "HTML",
+  url: "URL",
+  json: "JSON",
+};
+
 function titleFromPath(path: string) {
   const last = path.replace(/\/$/, "").split("/").pop() ?? path;
   return last
     .replace(/[-_]+/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase())
+    .split(" ")
+    .map((word) => BRAND_CASE[word.toLowerCase()] ?? word.replace(/^\w/, (c) => c.toUpperCase()))
+    .join(" ")
     .slice(0, 70);
 }
 

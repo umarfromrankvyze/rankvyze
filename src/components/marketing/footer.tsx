@@ -32,6 +32,8 @@ const COLUMNS = [
       { label: "AEO Guide", href: "/aeo-guide" },
       { label: "Engine Guides", href: "/rank-in" },
       { label: "AI Brand Mentions", href: "/ai-brand-mentions" },
+      { label: "AI Visibility Tools", href: "/ai-visibility-tools" },
+      { label: "Visibility Scoring", href: "/ai-search-visibility" },
       { label: "Glossary", href: "/glossary" },
       { label: "Blog", href: "/blog" },
       { label: "Documentation", href: "/docs" },

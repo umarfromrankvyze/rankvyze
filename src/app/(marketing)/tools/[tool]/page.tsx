@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { Section } from "@/components/marketing/section";
 import { FinalCta } from "@/components/marketing/sections/cta";
 import { ToolRunner } from "@/components/tools/tool-runner";
+import { SchemaGenerator } from "@/components/tools/schema-generator";
 import { BreadcrumbJsonLd, FaqJsonLd, PageJsonLd } from "@/components/seo/json-ld";
 import { TOOLS, getTool } from "@/content/tools";
 import { SITE_URL } from "@/lib/site";
@@ -70,7 +71,7 @@ export default async function ToolPage({ params }: { params: Promise<{ tool: str
 
       <Section className="pb-12 md:pb-16">
         <div className="container-x">
-          <div className="mx-auto max-w-3xl">
+          <div className={tool.input === "form" ? "mx-auto max-w-5xl" : "mx-auto max-w-3xl"}>
             <Link
               href="/tools"
               className="inline-flex items-center gap-1.5 text-[13.5px] font-medium text-ink-faint transition-colors hover:text-ink pointer-coarse:min-h-11"
@@ -83,19 +84,27 @@ export default async function ToolPage({ params }: { params: Promise<{ tool: str
             </h1>
             <p className="mt-5 text-pretty text-[17px] leading-relaxed text-ink-muted">{tool.description}</p>
 
+            {/* A builder has no URL to fetch, so it gets its own component
+                rather than an empty address bar above an unused submit. */}
             <div className="mt-9">
-              <ToolRunner
-                slug={
-                  tool.slug as
-                    | "ai-visibility-checker"
-                    | "ai-crawler-checker"
-                    | "schema-markup-checker"
-                    | "meta-tag-checker"
-                    | "domain-age-checker"
-                }
-                placeholder={tool.placeholder}
-                action={tool.action}
-              />
+              {tool.input === "form" ? (
+                <SchemaGenerator />
+              ) : (
+                <ToolRunner
+                  slug={
+                    tool.slug as
+                      | "ai-visibility-checker"
+                      | "ai-crawler-checker"
+                      | "schema-markup-checker"
+                      | "meta-tag-checker"
+                      | "domain-age-checker"
+                      | "what-ai-crawlers-see"
+                      | "llms-txt-generator"
+                  }
+                  placeholder={tool.placeholder}
+                  action={tool.action}
+                />
+              )}
             </div>
 
             <ul className="mt-8 space-y-2.5">
