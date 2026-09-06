@@ -33,6 +33,9 @@ const ROUTES = [
   "/",
   "/pricing",
   "/tools",
+  "/tools/robots-txt-generator",
+  "/tools/sitemap-checker",
+  "/tools/redirect-checker",
   "/tools/what-ai-crawlers-see",
   "/tools/llms-txt-generator",
   "/tools/schema-markup-generator",
@@ -95,6 +98,14 @@ const PROBE = `() => {
     if (cs.visibility === 'hidden' || cs.display === 'none') continue;
     // Links inside a paragraph are inline text, not tap targets.
     if (el.tagName === 'A' && el.closest('p, li, dd, figcaption')) continue;
+    // A checkbox or radio wrapped in a label: the label is what you actually
+    // tap, so measure that box instead of the 16px control inside it.
+    let box = r;
+    if ((el.type === 'checkbox' || el.type === 'radio')) {
+      const label = el.closest('label');
+      if (label) box = label.getBoundingClientRect();
+    }
+    if (box.height >= 44 && box.width >= 24) continue;
     if (r.height < 44 || r.width < 24) {
       small.push({
         tag: el.tagName.toLowerCase(),

@@ -9,12 +9,16 @@ import type { SchemaReport } from "@/lib/tools/schema";
 import type { VisibilityReport } from "@/lib/tools/visibility";
 import type { RenderingReport } from "@/lib/tools/rendering";
 import type { LlmsTxtReport } from "@/lib/tools/llms-txt";
+import type { SitemapReport } from "@/lib/tools/sitemap";
+import type { RedirectReport } from "@/lib/tools/redirects";
 import {
   runCrawlerCheck,
   runDomainAgeCheck,
   runLlmsTxtGenerate,
   runMetaCheck,
+  runRedirectCheck,
   runRenderingCheck,
+  runSitemapCheck,
   runSchemaCheck,
   runVisibilityCheck,
 } from "@/server/actions/tools";
@@ -38,13 +42,17 @@ type Slug =
   | "meta-tag-checker"
   | "domain-age-checker"
   | "what-ai-crawlers-see"
-  | "llms-txt-generator";
+  | "llms-txt-generator"
+  | "sitemap-checker"
+  | "redirect-checker";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- one map, four differently-shaped reports
 const ACTIONS: Record<Slug, any> = {
   "ai-visibility-checker": runVisibilityCheck,
   "what-ai-crawlers-see": runRenderingCheck,
   "llms-txt-generator": runLlmsTxtGenerate,
+  "sitemap-checker": runSitemapCheck,
+  "redirect-checker": runRedirectCheck,
   "ai-crawler-checker": runCrawlerCheck,
   "schema-markup-checker": runSchemaCheck,
   "meta-tag-checker": runMetaCheck,
@@ -93,6 +101,8 @@ export function ToolRunner({ slug, placeholder, action }: { slug: Slug; placehol
           {slug === "ai-visibility-checker" && <VisibilityResult report={state.data as VisibilityReport} />}
           {slug === "what-ai-crawlers-see" && <RenderingResult report={state.data as RenderingReport} />}
           {slug === "llms-txt-generator" && <LlmsTxtResult report={state.data as LlmsTxtReport} />}
+          {slug === "sitemap-checker" && <SitemapResult report={state.data as SitemapReport} />}
+          {slug === "redirect-checker" && <RedirectResult report={state.data as RedirectReport} />}
           {slug === "ai-crawler-checker" && <CrawlerResult report={state.data as CrawlerReport} />}
           {slug === "schema-markup-checker" && <SchemaResult report={state.data as SchemaReport} />}
           {slug === "meta-tag-checker" && <MetaResult report={state.data as MetaReport} />}
@@ -607,6 +617,158 @@ function LlmsTxtResult({ report }: { report: LlmsTxtReport }) {
             <span className="font-mono text-[12.5px] text-ink"> text/plain</span>.
           </li>
         </ul>
+      </Panel>
+    </div>
+  );
+}
+
+// --- sitemap checker -----------------------------------------------------
+
+function IssueList({ issues }: { issues: { severity: "warn" | "fail"; label: string; detail: string }[] }) {
+  if (issues.length === 0) {
+    return (
+      <div className="mt-4 flex items-start gap-3 rounded-2xl border border-green-200 bg-success-soft p-5">
+        <Check className="mt-0.5 size-4 shrink-0 text-green-700" />
+        <p className="text-[14.5px] leading-relaxed text-green-900">Nothing to flag. Everything we check came back clean.</p>
+      </div>
+    );
+  }
+  return (
+    <ul className="mt-4 space-y-3">
+      {issues.map((issue, i) => (
+        <li
+          key={i}
+          className={cn(
+            "flex items-start gap-3 rounded-2xl border p-5",
+            issue.severity === "fail" ? "border-red-200 bg-danger-soft" : "border-amber-200 bg-warning-soft",
+          )}
+        >
+          <TriangleAlert
+            className={cn("mt-0.5 size-4 shrink-0", issue.severity === "fail" ? "text-red-700" : "text-amber-700")}
+          />
+          <div className="min-w-0">
+            <p className={cn("text-[14.5px] font-semibold", issue.severity === "fail" ? "text-red-800" : "text-amber-800")}>
+              {issue.label}
+            </p>
+            <p className="mt-1 text-[13.5px] leading-relaxed text-ink-muted">{issue.detail}</p>
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function SitemapResult({ report }: { report: SitemapReport }) {
+  return (
+    <div>
+      <div className="rounded-2xl border border-line bg-surface-2 p-5">
+        <p className="text-[15px] font-semibold text-ink">
+          {report.totalUrls.toLocaleString()} URL{report.totalUrls === 1 ? "" : "s"}
+          {report.isIndex && ` across ${report.childSitemaps.length} child sitemap${report.childSitemaps.length === 1 ? "" : "s"}`}
+        </p>
+        <p className="mt-1 break-all text-[13px] text-ink-muted">{report.sitemapUrl}</p>
+      </div>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        {[
+          { label: "With lastmod", value: `${report.withLastmod} / ${report.totalUrls}` },
+          { label: "In robots.txt", value: report.declaredInRobots ? "Yes" : "No" },
+          { label: "Newest lastmod", value: report.newestLastmod?.slice(0, 10) ?? "—" },
+        ].map((stat) => (
+          <div key={stat.label} className="rounded-xl border border-line bg-white p-4">
+            <p className="text-[11.5px] font-semibold uppercase tracking-[0.06em] text-ink-faint">{stat.label}</p>
+            <p className="mt-1.5 font-display text-[19px] font-bold tabular-nums text-ink">{stat.value}</p>
+          </div>
+        ))}
+      </div>
+
+      <IssueList issues={report.issues} />
+
+      {report.sample.length > 0 && (
+        <Panel title="Sampled URLs" note={`${report.sample.length} picked at random — not a full crawl`}>
+          <ul className="space-y-2">
+            {report.sample.map((s) => (
+              <li key={s.url} className="flex items-start gap-3 text-[13px]">
+                <span
+                  className={cn(
+                    "shrink-0 rounded-md px-1.5 py-0.5 font-mono text-[11.5px] font-semibold",
+                    s.status && s.status < 400 ? "bg-success-soft text-green-700" : "bg-danger-soft text-red-700",
+                  )}
+                >
+                  {s.status ?? "—"}
+                </span>
+                <span className="min-w-0 break-all text-ink-muted">{s.url}</span>
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      )}
+
+      {report.robotsSitemaps.length > 0 && (
+        <Panel title="Declared in robots.txt">
+          <ul className="space-y-1.5">
+            {report.robotsSitemaps.map((s) => (
+              <li key={s} className="break-all font-mono text-[12.5px] text-ink-muted">
+                {s}
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      )}
+    </div>
+  );
+}
+
+// --- redirect checker ----------------------------------------------------
+
+function RedirectResult({ report }: { report: RedirectReport }) {
+  return (
+    <div>
+      <div className="rounded-2xl border border-line bg-surface-2 p-5">
+        <p className="text-[15px] font-semibold text-ink">
+          {report.hopCount === 0
+            ? "No redirects — this URL resolves directly."
+            : `${report.hopCount} redirect${report.hopCount === 1 ? "" : "s"} before the destination`}
+        </p>
+        <p className="mt-1 break-all text-[13px] text-ink-muted">
+          {report.resolved ? `Ends at ${report.final} (${report.finalStatus})` : "The chain did not resolve."}
+          {" · "}
+          {report.totalMs}ms total
+        </p>
+      </div>
+
+      <IssueList issues={report.issues} />
+
+      <Panel title="The chain" note="Each hop requested separately">
+        <ol className="space-y-2.5">
+          {report.hops.map((hop, i) => (
+            <li key={i} className="flex items-start gap-3">
+              <span
+                className={cn(
+                  "mt-0.5 shrink-0 rounded-md px-2 py-0.5 font-mono text-[11.5px] font-semibold",
+                  hop.status === 0 || hop.status >= 400
+                    ? "bg-danger-soft text-red-700"
+                    : hop.permanent
+                      ? "bg-success-soft text-green-700"
+                      : hop.status >= 300
+                        ? "bg-warning-soft text-amber-700"
+                        : "bg-surface-3 text-ink-muted",
+                )}
+              >
+                {hop.status || "—"}
+              </span>
+              <div className="min-w-0">
+                <p className="break-all font-mono text-[12.5px] text-ink">{hop.url}</p>
+                <p className="mt-0.5 text-[12px] text-ink-faint">
+                  {hop.status >= 300 && hop.status < 400
+                    ? `${hop.permanent ? "Permanent" : "Temporary"} · ${hop.elapsedMs}ms`
+                    : `${hop.statusText || "final"} · ${hop.elapsedMs}ms`}
+                </p>
+                {hop.blocked && <p className="mt-1 text-[12.5px] leading-relaxed text-red-700">{hop.blocked}</p>}
+              </div>
+            </li>
+          ))}
+        </ol>
       </Panel>
     </div>
   );

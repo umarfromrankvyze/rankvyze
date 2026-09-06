@@ -7,6 +7,8 @@ import { checkSchema, type SchemaReport } from "@/lib/tools/schema";
 import { checkVisibility, type VisibilityReport } from "@/lib/tools/visibility";
 import { checkRendering, type RenderingReport } from "@/lib/tools/rendering";
 import { generateLlmsTxt, type LlmsTxtReport } from "@/lib/tools/llms-txt";
+import { checkSitemap, type SitemapReport } from "@/lib/tools/sitemap";
+import { checkRedirects, type RedirectReport } from "@/lib/tools/redirects";
 import { ToolError } from "@/lib/tools/http";
 import { fail, succeed, type ActionResult } from "@/server/types";
 
@@ -26,7 +28,9 @@ export type ToolReport =
   | DomainAgeReport
   | VisibilityReport
   | RenderingReport
-  | LlmsTxtReport;
+  | LlmsTxtReport
+  | SitemapReport
+  | RedirectReport;
 
 async function run<T>(work: () => Promise<T>): Promise<ActionResult<T>> {
   try {
@@ -64,6 +68,14 @@ export async function runRenderingCheck(_prev: ActionResult<RenderingReport>, fo
 
 export async function runLlmsTxtGenerate(_prev: ActionResult<LlmsTxtReport>, formData: FormData) {
   return run(() => generateLlmsTxt(inputFrom(formData)));
+}
+
+export async function runSitemapCheck(_prev: ActionResult<SitemapReport>, formData: FormData) {
+  return run(() => checkSitemap(inputFrom(formData)));
+}
+
+export async function runRedirectCheck(_prev: ActionResult<RedirectReport>, formData: FormData) {
+  return run(() => checkRedirects(inputFrom(formData)));
 }
 
 export async function runDomainAgeCheck(_prev: ActionResult<DomainAgeReport>, formData: FormData) {

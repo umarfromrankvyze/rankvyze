@@ -46,6 +46,145 @@ export interface ToolDef {
 
 export const TOOLS: ToolDef[] = [
   {
+    slug: "robots-txt-generator",
+    group: "Generate",
+    input: "form",
+    name: "robots.txt Generator",
+    heading: "Build a robots.txt that doesn't lock out AI search.",
+    seoTitle: "Free robots.txt Generator (AI Crawlers)",
+    description:
+      "Generate a robots.txt with AI crawlers handled properly: training and search bots as separate choices, because blocking the wrong one costs AI answers.",
+    blurb:
+      "Generates robots.txt with AI training and AI search crawlers as separate toggles — the distinction most generators miss.",
+    placeholder: "",
+    action: "",
+    bullets: [
+      "Training crawlers and search crawlers as separate choices, not one switch",
+      "Warns you if you block the agents that put you in AI answers",
+      "Sitemap line, common disallow paths, and crawl-delay if you need it",
+    ],
+    targets: [
+      "robots.txt generator",
+      "robots txt generator free",
+      "block gptbot robots.txt",
+      "allow ai crawlers robots.txt",
+      "robots.txt for ai bots",
+    ],
+    faq: [
+      {
+        q: "Should I block AI crawlers in robots.txt?",
+        a: "Rarely all of them. Blocking the training crawlers (GPTBot, ClaudeBot, Google-Extended) is a legitimate choice if you don't want your writing used to train models. Blocking the search crawlers (OAI-SearchBot, PerplexityBot, Claude-SearchBot) removes you from AI answers entirely, which almost nobody intends.",
+      },
+      {
+        q: "What is the difference between GPTBot and OAI-SearchBot?",
+        a: "GPTBot gathers training data. OAI-SearchBot indexes for ChatGPT's search results. They are separate user agents with separate effects, and confusing them is the most common self-inflicted mistake in this whole field.",
+      },
+      {
+        q: "Does robots.txt actually stop crawlers?",
+        a: "It is a published request that well-behaved crawlers honour, not access control. It doesn't authenticate anything, and listing a path under Disallow announces that the path exists. Anything that must stay private needs a login.",
+      },
+      {
+        q: "Where does robots.txt go?",
+        a: "At your domain root, served as text/plain. It applies to that exact host and protocol only, so subdomains and http vs https each need their own.",
+      },
+      {
+        q: "Why isn't my robots.txt being respected?",
+        a: "Check your CDN. Cloudflare and others can block AI crawlers at the edge regardless of what your file permits, and some enable it by default. Our AI Crawler Checker makes a real request as each agent to catch exactly that.",
+      },
+    ],
+    related: ["ai-crawler-checker", "sitemap-checker"],
+  },
+  {
+    slug: "sitemap-checker",
+    group: "Diagnose",
+    name: "Sitemap Checker",
+    heading: "Is your sitemap doing its job?",
+    seoTitle: "Free Sitemap Checker & Validator",
+    description:
+      "Find and parse your sitemap, count the URLs, and catch the problems that quietly waste crawl budget: off-host URLs, missing lastmod, robots.txt gaps.",
+    blurb: "Finds and parses your sitemap, follows an index, and flags off-host URLs, missing lastmod and robots.txt gaps.",
+    placeholder: "yoursite.com",
+    action: "Check sitemap",
+    bullets: [
+      "Follows a sitemap index and totals the URLs across it",
+      "Off-host URLs, HTTP on an HTTPS site, duplicates, missing lastmod",
+      "Checks robots.txt actually declares the sitemap",
+    ],
+    targets: [
+      "sitemap checker",
+      "sitemap validator",
+      "xml sitemap checker",
+      "check sitemap for errors",
+      "sitemap test tool",
+    ],
+    faq: [
+      {
+        q: "How do I check if my sitemap is valid?",
+        a: "Enter your domain. This finds the file, parses it, follows a sitemap index one level, and reports URL counts plus the problems that matter: URLs on another host (which is invalid), HTTP URLs on an HTTPS site, duplicates, and how many entries carry a lastmod.",
+      },
+      {
+        q: "Does this check every URL for 404s?",
+        a: "No — a large sitemap would mean thousands of requests from us to your server, which isn't a reasonable thing for a free tool to do. It checks a small random sample and says so. For a full crawl, use Search Console's coverage report.",
+      },
+      {
+        q: "Does lastmod matter?",
+        a: "Yes. It is the freshness signal crawlers use to decide what to re-fetch. A sitemap where nothing has a lastmod gives them no way to prioritise, so everything looks equally stale.",
+      },
+      {
+        q: "How many URLs can a sitemap hold?",
+        a: "50,000 per file, and 50MB uncompressed. Beyond that, split it and point at the parts from a sitemap index.",
+      },
+      {
+        q: "Do I need to declare my sitemap in robots.txt?",
+        a: "It is the standard way a crawler discovers it without being told. Submitting in Search Console works too, but the robots.txt line is free and reaches every crawler, including the AI ones.",
+      },
+    ],
+    related: ["ai-crawler-checker", "robots-txt-generator"],
+  },
+  {
+    slug: "redirect-checker",
+    group: "Diagnose",
+    name: "Redirect Checker",
+    heading: "Follow the whole redirect chain.",
+    seoTitle: "Free Redirect Checker (301, 302, Chains)",
+    description:
+      "Trace every hop a URL takes, with the status code at each step. Catch redirect chains, loops, temporary redirects that should be permanent, and dead destinations.",
+    blurb: "Traces every hop one at a time, showing the status at each step — chains, loops and 302s that should be 301s.",
+    placeholder: "yoursite.com/old-page",
+    action: "Trace redirects",
+    bullets: [
+      "Every hop shown separately, not collapsed into a destination",
+      "Flags chains, loops, and temporary redirects that should be permanent",
+      "Catches a destination that ends in an error",
+    ],
+    targets: [
+      "redirect checker",
+      "301 redirect checker",
+      "redirect chain checker",
+      "http status checker",
+      "check redirects online",
+    ],
+    faq: [
+      {
+        q: "What is the difference between a 301 and a 302?",
+        a: "301 and 308 are permanent: engines update their index and pass ranking signals to the destination. 302, 303 and 307 are temporary: the original URL stays indexed and the destination may not inherit those signals. Using 302 for a permanent move is a common and costly mistake.",
+      },
+      {
+        q: "Why do redirect chains matter?",
+        a: "Each hop costs latency for the visitor and a little of the signal being passed. Crawlers also stop following after a handful. Point the first URL straight at the final destination rather than through two or three intermediates.",
+      },
+      {
+        q: "How many redirects is too many?",
+        a: "More than two is worth fixing. Search engines typically stop following somewhere around five, and every hop is an extra round trip on a slow connection.",
+      },
+      {
+        q: "Does this follow redirects to other domains?",
+        a: "Yes, as long as each destination is a public address. Hops that resolve to private or internal addresses are reported and not followed — a public URL redirecting into internal address space is exactly the attack this refuses.",
+      },
+    ],
+    related: ["sitemap-checker", "meta-tag-checker"],
+  },
+  {
     slug: "what-ai-crawlers-see",
     group: "Diagnose",
     name: "What AI Crawlers See",

@@ -6,6 +6,7 @@ import { Section } from "@/components/marketing/section";
 import { FinalCta } from "@/components/marketing/sections/cta";
 import { ToolRunner } from "@/components/tools/tool-runner";
 import { SchemaGenerator } from "@/components/tools/schema-generator";
+import { RobotsGenerator } from "@/components/tools/robots-generator";
 import { BreadcrumbJsonLd, FaqJsonLd, PageJsonLd } from "@/components/seo/json-ld";
 import { TOOLS, getTool } from "@/content/tools";
 import { SITE_URL } from "@/lib/site";
@@ -88,7 +89,11 @@ export default async function ToolPage({ params }: { params: Promise<{ tool: str
                 rather than an empty address bar above an unused submit. */}
             <div className="mt-9">
               {tool.input === "form" ? (
-                <SchemaGenerator />
+                tool.slug === "robots-txt-generator" ? (
+                  <RobotsGenerator />
+                ) : (
+                  <SchemaGenerator />
+                )
               ) : (
                 <ToolRunner
                   slug={
@@ -100,6 +105,8 @@ export default async function ToolPage({ params }: { params: Promise<{ tool: str
                       | "domain-age-checker"
                       | "what-ai-crawlers-see"
                       | "llms-txt-generator"
+                      | "sitemap-checker"
+                      | "redirect-checker"
                   }
                   placeholder={tool.placeholder}
                   action={tool.action}

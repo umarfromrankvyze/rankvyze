@@ -204,7 +204,7 @@ export function SchemaGenerator() {
                       type="button"
                       aria-label="Remove question"
                       onClick={() => set("faq", form.faq.filter((_, j) => j !== i))}
-                      className="rounded-md border border-line p-2 text-ink-faint transition-colors hover:border-red-200 hover:text-red-600"
+                      className="grid size-9 shrink-0 place-items-center rounded-md border border-line text-ink-faint transition-colors hover:border-red-200 hover:text-red-600 pointer-coarse:size-11"
                     >
                       <Trash2 className="size-3.5" />
                     </button>
