@@ -1,4 +1,5 @@
 import { CONTENT_UPDATED, SITE, SITE_URL } from "@/lib/site";
+import { ENTITY } from "@/content/entity-profile";
 import { GUARANTEE_DAYS, GUARANTEE_MIN_ENGINES, PRICE_CENTS } from "@/lib/guarantee";
 
 /**
@@ -41,6 +42,10 @@ export function SiteJsonLd() {
     // existing, and where it will actually take customers.
     foundingDate: SITE.foundingDate,
     areaServed: SITE.areaServed,
+    // Topics with real published coverage behind them. This is the one entity
+    // signal that doesn't depend on a third party existing, so it is worth
+    // getting right while the sameAs profiles are still being created.
+    knowsAbout: ENTITY.knowsAbout,
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "customer support",

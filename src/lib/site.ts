@@ -22,7 +22,19 @@ export const SITE = {
   foundingDate: "2026",
   /** Where we will actually take customers. Not a claim of offices. */
   areaServed: "Worldwide",
-  /** Fill these in as the profiles go live — they are the corroboration signal. */
+  /**
+   * Third-party profiles that describe this same entity.
+   *
+   * Empty until the profiles genuinely exist. A sameAs pointing at a 404 is
+   * worse than no sameAs at all: it asserts a corroborating source and then
+   * fails to produce one, which is exactly the inconsistency the property is
+   * meant to resolve.
+   *
+   * To fill it: run `npx tsx scripts/entity-checklist.mts` for what to create
+   * and the exact copy to paste, add the URLs here, then run
+   * `npx tsx scripts/check-sameas.mts` before deploying — it refuses any URL
+   * that doesn't resolve.
+   */
   sameAs: [] as string[],
 } as const;
 
