@@ -7,8 +7,10 @@ import { Features } from "@/components/marketing/sections/features";
 import { Audit } from "@/components/marketing/sections/audit";
 import { Optimization } from "@/components/marketing/sections/optimization";
 import { Competitors } from "@/components/marketing/sections/competitors";
+import { Faq } from "@/components/marketing/sections/faq";
 import { FinalCta } from "@/components/marketing/sections/cta";
-import { PageJsonLd, ServiceJsonLd } from "@/components/seo/json-ld";
+import { FaqJsonLd, PageJsonLd, ServiceJsonLd } from "@/components/seo/json-ld";
+import { PRICING_FAQ } from "@/content/faq";
 
 export default function HomePage() {
   return (
@@ -19,6 +21,9 @@ export default function HomePage() {
         description="We rank your business in ChatGPT, Gemini and Claude. If you don't show up in 45 days, we refund you 100%."
       />
       <ServiceJsonLd />
+      {/* Reads the same array the visible section below renders, so the markup
+          can never claim an answer the page doesn't show. */}
+      <FaqJsonLd path="/" items={PRICING_FAQ} />
       <Hero />
       <SocialProof />
       <Problem />
@@ -28,6 +33,7 @@ export default function HomePage() {
       <Audit />
       <Optimization />
       <Competitors />
+      <Faq />
       <FinalCta />
     </>
   );
