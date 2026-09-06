@@ -131,6 +131,11 @@ export default async function GlossaryTermPage({ params }: { params: Promise<{ t
             <Button variant="outline" asChild>
               <Link href="/rank-in">Engine guides</Link>
             </Button>
+            {data.slug === "generative-engine-optimization" && (
+              <Button variant="outline" asChild>
+                <Link href="/generative-engine-optimization">The full GEO guide</Link>
+              </Button>
+            )}
           </div>
         </div>
       </article>

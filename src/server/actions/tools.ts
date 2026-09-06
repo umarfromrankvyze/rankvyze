@@ -5,6 +5,8 @@ import { checkDomainAge, type DomainAgeReport } from "@/lib/tools/domain-age";
 import { checkMeta, type MetaReport } from "@/lib/tools/meta";
 import { checkSchema, type SchemaReport } from "@/lib/tools/schema";
 import { checkVisibility, type VisibilityReport } from "@/lib/tools/visibility";
+import { checkRendering, type RenderingReport } from "@/lib/tools/rendering";
+import { generateLlmsTxt, type LlmsTxtReport } from "@/lib/tools/llms-txt";
 import { ToolError } from "@/lib/tools/http";
 import { fail, succeed, type ActionResult } from "@/server/types";
 
@@ -17,7 +19,14 @@ import { fail, succeed, type ActionResult } from "@/server/types";
  * generically, so an internal failure can't leak a stack trace into the page.
  */
 
-export type ToolReport = CrawlerReport | SchemaReport | MetaReport | DomainAgeReport | VisibilityReport;
+export type ToolReport =
+  | CrawlerReport
+  | SchemaReport
+  | MetaReport
+  | DomainAgeReport
+  | VisibilityReport
+  | RenderingReport
+  | LlmsTxtReport;
 
 async function run<T>(work: () => Promise<T>): Promise<ActionResult<T>> {
   try {
@@ -47,6 +56,14 @@ export async function runMetaCheck(_prev: ActionResult<MetaReport>, formData: Fo
 
 export async function runVisibilityCheck(_prev: ActionResult<VisibilityReport>, formData: FormData) {
   return run(() => checkVisibility(inputFrom(formData)));
+}
+
+export async function runRenderingCheck(_prev: ActionResult<RenderingReport>, formData: FormData) {
+  return run(() => checkRendering(inputFrom(formData)));
+}
+
+export async function runLlmsTxtGenerate(_prev: ActionResult<LlmsTxtReport>, formData: FormData) {
+  return run(() => generateLlmsTxt(inputFrom(formData)));
 }
 
 export async function runDomainAgeCheck(_prev: ActionResult<DomainAgeReport>, formData: FormData) {
