@@ -30,6 +30,7 @@ const COLUMNS = [
       { label: "Free Tools", href: "/tools" },
       { label: "AEO Guide", href: "/aeo-guide" },
       { label: "Engine Guides", href: "/rank-in" },
+      { label: "AI Brand Mentions", href: "/ai-brand-mentions" },
       { label: "Glossary", href: "/glossary" },
       { label: "Blog", href: "/blog" },
       { label: "Documentation", href: "/docs" },

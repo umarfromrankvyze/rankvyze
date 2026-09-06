@@ -3,6 +3,7 @@ import { publishedPosts } from "@/lib/blog";
 import { TOOLS } from "@/content/tools";
 import { INDUSTRIES } from "@/content/industries";
 import { ENGINE_GUIDES } from "@/content/engines";
+import { ANSWER as BRAND_ANSWER } from "@/content/brand-mentions";
 import { GLOSSARY } from "@/content/glossary";
 import { CONTENT_UPDATED, SITE, SITE_URL } from "@/lib/site";
 import { CLAIM_WINDOW_DAYS, GUARANTEE_DAYS, GUARANTEE_MIN_ENGINES, PRICE_LABEL } from "@/lib/guarantee";
@@ -44,6 +45,11 @@ How the measurement works: analysts ask each tracked prompt on each engine in a 
 ## Free tools
 ${TOOLS.map((t) => `- [${t.name}](${SITE_URL}/tools/${t.slug}): ${t.blurb}`).join("\n")}
 - [Free AEO scan](${SITE_URL}/pricing): Ten weighted signals scored out of 100, no signup.
+
+## Tracking AI brand mentions
+### ${BRAND_ANSWER.question}
+${BRAND_ANSWER.short}
+Full guide, including the other tools that measure this: ${SITE_URL}/ai-brand-mentions
 
 ## How each engine works
 Each answer below is self-contained and quotable as it stands.
