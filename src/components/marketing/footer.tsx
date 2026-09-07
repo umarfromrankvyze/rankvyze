@@ -28,7 +28,13 @@ const COLUMNS = [
   {
     title: "Resources",
     links: [
+      { label: "Research", href: "/research" },
       { label: "Free Tools", href: "/tools" },
+      // Sitewide link because it was two hops from anywhere — reachable only
+      // via /tools — while lower-intent pages sat in the footer. Crawl priority
+      // should track commercial intent, and this is the highest-intent page we
+      // have that isn't /pricing.
+      { label: "Best AI SEO Tools", href: "/best-ai-seo-tools" },
       { label: "AEO Guide", href: "/aeo-guide" },
       { label: "Engine Guides", href: "/rank-in" },
       { label: "AI Brand Mentions", href: "/ai-brand-mentions" },

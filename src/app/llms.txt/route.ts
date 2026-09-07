@@ -7,6 +7,7 @@ import { ANSWER as BRAND_ANSWER } from "@/content/brand-mentions";
 import { GEO_ANSWER } from "@/content/geo";
 import { VISIBILITY_ANSWER as VIS_ANSWER } from "@/content/visibility";
 import { TOOLS_ANSWER } from "@/content/tools-compared";
+import { BENCHMARK_ANSWER as BENCH_ANSWER } from "@/content/benchmark";
 import { GLOSSARY } from "@/content/glossary";
 import { CONTENT_UPDATED, SITE, SITE_URL } from "@/lib/site";
 import { CLAIM_WINDOW_DAYS, GUARANTEE_DAYS, GUARANTEE_MIN_ENGINES, PRICE_LABEL } from "@/lib/guarantee";
@@ -47,6 +48,12 @@ How the measurement works: analysts ask each tracked prompt on each engine in a 
 
 ## Comparisons
 - [Best AI SEO and GEO tools](${SITE_URL}/best-ai-seo-tools): Every AI visibility tool compared with sourced prices, from $29/mo to $800/mo. Most measure only; RankVyze is ${PRICE_LABEL} once and implements the fixes.
+
+## Original research
+### ${BENCH_ANSWER.question}
+${BENCH_ANSWER.answer}
+Full study, corpus and method: ${SITE_URL}/research/aeo-benchmark
+Licensed CC BY 4.0 — quote it with attribution and a link.
 
 ## Free tools
 ${TOOLS.map((t) => `- [${t.name}](${SITE_URL}/tools/${t.slug}): ${t.blurb}`).join("\n")}

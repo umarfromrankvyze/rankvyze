@@ -75,7 +75,10 @@ function isPrivateAddress(ip: string) {
   );
 }
 
-async function fetchText(url: string, signal: AbortSignal): Promise<{ ok: boolean; body: string; status: number }> {
+async function fetchText(
+  url: string,
+  signal: AbortSignal,
+): Promise<{ ok: boolean; body: string; status: number; finalUrl: string; contentType: string }> {
   const res = await fetch(url, {
     signal,
     redirect: "follow",
@@ -85,8 +88,11 @@ async function fetchText(url: string, signal: AbortSignal): Promise<{ ok: boolea
       accept: "text/html,application/xhtml+xml,text/plain;q=0.9,*/*;q=0.8",
     },
   });
+  const finalUrl = res.url || url;
+  const contentType = res.headers.get("content-type") ?? "";
+
   const reader = res.body?.getReader();
-  if (!reader) return { ok: res.ok, body: "", status: res.status };
+  if (!reader) return { ok: res.ok, body: "", status: res.status, finalUrl, contentType };
 
   const chunks: Uint8Array[] = [];
   let total = 0;
@@ -97,7 +103,7 @@ async function fetchText(url: string, signal: AbortSignal): Promise<{ ok: boolea
     total += value.length;
   }
   await reader.cancel().catch(() => {});
-  return { ok: res.ok, body: new TextDecoder().decode(Buffer.concat(chunks)), status: res.status };
+  return { ok: res.ok, body: new TextDecoder().decode(Buffer.concat(chunks)), status: res.status, finalUrl, contentType };
 }
 
 /** All JSON-LD blocks on the page, flattened (handles @graph). */
@@ -199,6 +205,26 @@ const GENERIC_DESCRIPTIONS = [
 const CATEGORY_HINTS =
   /\b(agency|studio|consultancy|consulting|advisory|software|platform|app|saas|shop|store|clinic|dentist|dental|law|legal|lawyer|attorney|accountant|accounting|bookkeeping|marketing|advertising|media|design|development|developer|engineering|engineer|builder|manufacturer|supplier|wholesaler|distributor|restaurant|cafe|catering|hotel|hospitality|salon|spa|gym|fitness|wellness|school|academy|tutoring|training|courses|insurance|bank|finance|financial|lending|mortgage|realty|real estate|property|lettings|logistics|freight|shipping|removals|repair|maintenance|service|services|solutions|company|firm|practice|contractor|plumber|electrician|roofing|hvac|landscaping|cleaning|security|photographer|videographer|therapist|therapy|counselling|veterinary|childcare|recruitment|staffing|recruiter|analytics|optimization|optimisation|seo|ecommerce|e-commerce|retailer|nonprofit|charity)\b/i;
 
+/**
+ * True only when the response really is the plain-text file we asked for:
+ * still at that path after redirects, not served as HTML, and not opening
+ * with markup. Any one of those failing means we were handed a page, not a
+ * file, and treating it as the file produces confidently wrong findings.
+ */
+function servedAsText(
+  res: { ok: boolean; body: string; finalUrl: string; contentType: string } | null,
+  expectedPath: string,
+): boolean {
+  if (!res?.ok) return false;
+  try {
+    if (new URL(res.finalUrl).pathname.replace(/\/$/, "") !== expectedPath) return false;
+  } catch {
+    return false;
+  }
+  if (/text\/html|application\/xhtml/i.test(res.contentType)) return false;
+  return !/^\s*(<!doctype|<html|<\?xml)/i.test(res.body.slice(0, 200));
+}
+
 export async function scanUrl(rawUrl: string): Promise<ScanResult> {
   let target: URL;
   try {
@@ -231,8 +257,13 @@ export async function scanUrl(rawUrl: string): Promise<ScanResult> {
       fetchText(`${origin}/robots.txt`, controller.signal).catch(() => null),
       fetchText(`${origin}/llms.txt`, controller.signal).catch(() => null),
     ]);
-    robots = r?.ok ? r.body : "";
-    llms = Boolean(l?.ok && l.body.trim().length > 20);
+    // A 200 is not proof the file exists. Plenty of sites 301 any unknown path
+    // to their homepage, so following the redirect yields a full HTML page and
+    // a naive check reports "found llms.txt" for a site that has none. Caught
+    // when a benchmark run claimed 47% of large sites had one; the real figure
+    // was a fraction of that.
+    robots = servedAsText(r, "/robots.txt") ? r!.body : "";
+    llms = servedAsText(l, "/llms.txt") && l!.body.trim().length > 20;
   } finally {
     clearTimeout(timer);
   }
