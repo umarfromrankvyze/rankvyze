@@ -11,11 +11,13 @@ import type { RenderingReport } from "@/lib/tools/rendering";
 import type { LlmsTxtReport } from "@/lib/tools/llms-txt";
 import type { SitemapReport } from "@/lib/tools/sitemap";
 import type { RedirectReport } from "@/lib/tools/redirects";
+import type { InternalLinkReport } from "@/lib/tools/internal-links";
 import {
   runCrawlerCheck,
   runDomainAgeCheck,
   runLlmsTxtGenerate,
   runMetaCheck,
+  runInternalLinkCheck,
   runRedirectCheck,
   runRenderingCheck,
   runSitemapCheck,
@@ -44,7 +46,8 @@ type Slug =
   | "what-ai-crawlers-see"
   | "llms-txt-generator"
   | "sitemap-checker"
-  | "redirect-checker";
+  | "redirect-checker"
+  | "internal-link-checker";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- one map, four differently-shaped reports
 const ACTIONS: Record<Slug, any> = {
@@ -53,6 +56,7 @@ const ACTIONS: Record<Slug, any> = {
   "llms-txt-generator": runLlmsTxtGenerate,
   "sitemap-checker": runSitemapCheck,
   "redirect-checker": runRedirectCheck,
+  "internal-link-checker": runInternalLinkCheck,
   "ai-crawler-checker": runCrawlerCheck,
   "schema-markup-checker": runSchemaCheck,
   "meta-tag-checker": runMetaCheck,
@@ -103,6 +107,7 @@ export function ToolRunner({ slug, placeholder, action }: { slug: Slug; placehol
           {slug === "llms-txt-generator" && <LlmsTxtResult report={state.data as LlmsTxtReport} />}
           {slug === "sitemap-checker" && <SitemapResult report={state.data as SitemapReport} />}
           {slug === "redirect-checker" && <RedirectResult report={state.data as RedirectReport} />}
+          {slug === "internal-link-checker" && <InternalLinkResult report={state.data as InternalLinkReport} />}
           {slug === "ai-crawler-checker" && <CrawlerResult report={state.data as CrawlerReport} />}
           {slug === "schema-markup-checker" && <SchemaResult report={state.data as SchemaReport} />}
           {slug === "meta-tag-checker" && <MetaResult report={state.data as MetaReport} />}
@@ -770,6 +775,144 @@ function RedirectResult({ report }: { report: RedirectReport }) {
           ))}
         </ol>
       </Panel>
+    </div>
+  );
+}
+
+// --- internal link checker -----------------------------------------------
+
+function InternalLinkResult({ report }: { report: InternalLinkReport }) {
+  // Sitewide targets are nav and footer furniture. Showing them at the top of a
+  // ranking would put "Privacy" above every page that actually earned its links.
+  const ranked = report.pages.filter((p) => !p.sitewide).slice(0, 12);
+  const sitewide = report.pages.filter((p) => p.sitewide);
+  const maxContextual = Math.max(1, ...ranked.map((p) => p.contextual));
+  const maxDepthCount = Math.max(1, ...report.depthHistogram.map((d) => d.count));
+
+  return (
+    <div>
+      <div className="rounded-2xl border border-line bg-surface-2 p-5">
+        <p className="text-[15px] font-semibold text-ink">
+          {report.pagesCrawled} page{report.pagesCrawled === 1 ? "" : "s"} crawled,{" "}
+          {report.totalLinks.toLocaleString()} internal link{report.totalLinks === 1 ? "" : "s"} found
+        </p>
+        <p className="mt-1 text-[13px] leading-relaxed text-ink-muted">
+          Starting from {report.startUrl}. Capped at {report.crawlLimit} pages, so everything below describes the part of
+          the site we reached — not the whole of it.
+          {report.robotsApplied && " Your robots.txt was obeyed."}
+        </p>
+      </div>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        {[
+          { label: "Unique targets", value: report.uniqueTargets.toLocaleString() },
+          {
+            label: report.crawlComplete ? "Orphans in sitemap" : "Unlinked so far",
+            value: report.sitemapUrls === null ? "—" : `${report.orphans.length} / ${report.sitemapUrls}`,
+          },
+          { label: "Broken links", value: String(report.broken.length) },
+        ].map((stat) => (
+          <div key={stat.label} className="rounded-xl border border-line bg-white p-4">
+            <p className="text-[11.5px] font-semibold uppercase tracking-[0.06em] text-ink-faint">{stat.label}</p>
+            <p className="mt-1.5 font-display text-[19px] font-bold tabular-nums text-ink">{stat.value}</p>
+          </div>
+        ))}
+      </div>
+
+      <IssueList issues={report.issues} />
+
+      {ranked.length > 0 && (
+        <Panel
+          title="Most-linked pages"
+          note="Nav and footer links excluded — those appear everywhere and say nothing about importance"
+        >
+          <ul className="space-y-2.5">
+            {ranked.map((p) => (
+              <li key={p.url} className="grid grid-cols-[1fr_auto] items-center gap-3">
+                <div className="min-w-0">
+                  <p className="truncate font-mono text-[12.5px] text-ink">{p.path}</p>
+                  <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-line">
+                    <div
+                      className="h-full rounded-full bg-brand-500"
+                      style={{ width: `${Math.max(4, (p.contextual / maxContextual) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+                <span className="shrink-0 text-right font-mono text-[12px] tabular-nums text-ink-muted">
+                  {p.contextual} link{p.contextual === 1 ? "" : "s"}
+                  {p.depth !== null && <span className="text-ink-faint"> · d{p.depth}</span>}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      )}
+
+      {report.depthHistogram.length > 0 && (
+        <Panel title="Clicks from your starting page" note="Crawl frequency falls off sharply with depth">
+          <ul className="space-y-2">
+            {report.depthHistogram.map((d) => (
+              <li key={d.depth} className="grid grid-cols-[4.5rem_1fr_2.5rem] items-center gap-3">
+                <span className="font-mono text-[12px] text-ink-muted">
+                  {d.depth === 0 ? "Start" : `${d.depth} click${d.depth === 1 ? "" : "s"}`}
+                </span>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-line">
+                  <div
+                    className={cn("h-full rounded-full", d.depth >= 3 ? "bg-amber-500" : "bg-ink/70")}
+                    style={{ width: `${Math.max(3, (d.count / maxDepthCount) * 100)}%` }}
+                  />
+                </div>
+                <span className="text-right font-mono text-[12px] tabular-nums text-ink-muted">{d.count}</span>
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      )}
+
+      {report.orphans.length > 0 && (
+        <Panel
+          title={report.crawlComplete ? "In your sitemap, linked from nothing" : "Not linked from the pages we reached"}
+          note={
+            report.crawlComplete
+              ? "Reachable only by a crawler that reads the sitemap"
+              : `We crawled ${report.pagesCrawled} of ${report.sitemapUrls} URLs, so these may be linked from a page we did not reach. Confirm before acting.`
+          }
+        >
+          <ul className="space-y-1.5">
+            {report.orphans.map((o) => (
+              <li key={o} className="break-all font-mono text-[12.5px] text-ink-muted">
+                {o}
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      )}
+
+      {report.broken.length > 0 && (
+        <Panel title="Broken internal links">
+          <ul className="space-y-2">
+            {report.broken.map((b) => (
+              <li key={b.url} className="flex items-start gap-3 text-[13px]">
+                <span className="shrink-0 rounded-md bg-danger-soft px-1.5 py-0.5 font-mono text-[11.5px] font-semibold text-red-700">
+                  {b.status ?? "—"}
+                </span>
+                <span className="min-w-0">
+                  <span className="block break-all text-ink-muted">{b.url}</span>
+                  <span className="mt-0.5 block break-all text-[12px] text-ink-faint">linked from {b.from}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      )}
+
+      {sitewide.length > 0 && (
+        <Panel title="Sitewide links" note="Present on nearly every page — your nav and footer">
+          <p className="text-[13px] leading-relaxed text-ink-muted">
+            {sitewide.map((p) => p.path).join(" · ")}
+          </p>
+        </Panel>
+      )}
     </div>
   );
 }

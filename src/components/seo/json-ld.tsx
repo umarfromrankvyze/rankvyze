@@ -1,4 +1,5 @@
 import { CONTENT_UPDATED, SITE, SITE_URL } from "@/lib/site";
+import { stripInline } from "@/components/blog/rich-text";
 import { ENTITY } from "@/content/entity-profile";
 import { GUARANTEE_DAYS, GUARANTEE_MIN_ENGINES, PRICE_CENTS } from "@/lib/guarantee";
 
@@ -139,10 +140,14 @@ export function FaqJsonLd({ path, items }: { path: string; items: { q: string; a
         "@type": "FAQPage",
         "@id": `${SITE_URL}${path}#faq`,
         isPartOf: { "@id": SITE_ID },
+        // Answers are authored with the same inline syntax as body copy, so the
+        // markup has to be stripped here. An engine that lifts an answer
+        // verbatim would otherwise quote "[the checker](/tools/x)" at a reader,
+        // which is worse than having published no FAQ markup at all.
         mainEntity: items.map((item) => ({
           "@type": "Question",
-          name: item.q,
-          acceptedAnswer: { "@type": "Answer", text: item.a },
+          name: stripInline(item.q),
+          acceptedAnswer: { "@type": "Answer", text: stripInline(item.a) },
         })),
       }}
     />

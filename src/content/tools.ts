@@ -10,7 +10,10 @@
  * backlink data only exists inside commercial crawls (Ahrefs, Majestic, Moz,
  * Semrush, DataForSEO). Shipping either with invented numbers would be exactly
  * the unverifiable claim this product argues against. They can be added the day
- * an API key exists; see /tools for how we say this to visitors.
+ * an API key exists; see /tools for how we say this to visitors. The internal
+ * link checker is the honest half of that question: link structure inside a
+ * site needs no proprietary index, because the site being measured serves
+ * every input.
  */
 
 export type ToolGroup = "Diagnose" | "Generate" | "Look up";
@@ -183,6 +186,59 @@ export const TOOLS: ToolDef[] = [
       },
     ],
     related: ["sitemap-checker", "meta-tag-checker"],
+  },
+  {
+    slug: "internal-link-checker",
+    group: "Diagnose",
+    name: "Internal Link Checker",
+    heading: "Which of your pages do your own links actually vote for?",
+    seoTitle: "Free Internal Link Checker",
+    description:
+      "Rank your pages by internal links, with nav and footer noise stripped out. Finds orphan pages, broken links and anything buried too deep.",
+    blurb:
+      "Ranks your pages by internal links, ignoring nav and footer noise. Finds orphans, broken links and anything buried three clicks down.",
+    placeholder: "yoursite.com",
+    action: "Check links",
+    bullets: [
+      "Separates contextual links from sitewide nav and footer links",
+      "Finds sitemap URLs that nothing on the site links to",
+      "Reports click depth, broken internal links and stray nofollows",
+    ],
+    targets: [
+      "internal link checker",
+      "internal link analysis tool",
+      "find orphan pages",
+      "broken internal link checker",
+      "click depth checker",
+      "internal linking tool free",
+    ],
+    faq: [
+      {
+        q: "How do I check my internal links?",
+        a: "Enter your domain. This crawls up to 25 pages breadth-first from that address, records every internal link it finds, and ranks your pages by how many other pages link to them. It obeys your robots.txt, so anything you have disallowed is skipped and reported rather than fetched.",
+      },
+      {
+        q: "Why does this ignore my nav and footer links?",
+        a: "Because they appear on every page, they carry no information about which pages matter. A page linked from the footer looks well-linked to a naive counter while having no editorial support at all. Any target appearing on 80% or more of the crawled pages is classed as sitewide and shown separately.",
+      },
+      {
+        q: "What is an orphan page?",
+        a: "A page nothing links to. It is usually in the sitemap, so a crawler can find it once, but there is no path to it by following links — which is how engines judge whether a page matters. Orphans are the single most common reason a page sits unindexed on an otherwise healthy site.",
+      },
+      {
+        q: "How deep is too deep?",
+        a: "Crawl frequency falls off sharply with click depth. Anything commercially important belongs within two clicks of your homepage. Three or more clicks is where pages start getting crawled rarely and refreshed slowly, which matters most for pages whose value depends on being current.",
+      },
+      {
+        q: "Does this check backlinks from other sites?",
+        a: "No. Backlink counts and Domain Rating only exist inside commercial crawls like Ahrefs and Majestic, and there is no honest free source for either — so we do not pretend to have one. Internal links need no proprietary index, because your own site serves every input. They are also the half of link equity you can change today.",
+      },
+      {
+        q: "Why only 25 pages?",
+        a: "This fetches your pages from our servers, and a free tool crawling a stranger's whole site is not a reasonable thing to do to it. Twenty-five pages breadth-first is enough to characterise link structure and depth. The result says what it covered rather than implying it saw everything.",
+      },
+    ],
+    related: ["sitemap-checker", "redirect-checker"],
   },
   {
     slug: "what-ai-crawlers-see",

@@ -9,6 +9,7 @@ import { SchemaGenerator } from "@/components/tools/schema-generator";
 import { RobotsGenerator } from "@/components/tools/robots-generator";
 import { BreadcrumbJsonLd, FaqJsonLd, PageJsonLd } from "@/components/seo/json-ld";
 import { TOOLS, getTool } from "@/content/tools";
+import { getToolGuide } from "@/content/tool-guides";
 import { SITE_URL } from "@/lib/site";
 
 export const dynamicParams = false;
@@ -39,6 +40,7 @@ export default async function ToolPage({ params }: { params: Promise<{ tool: str
   if (!tool) notFound();
 
   const related = tool.related.map((slug) => getTool(slug)).filter((t) => t !== undefined);
+  const guide = getToolGuide(tool.slug);
 
   return (
     <>
@@ -69,6 +71,31 @@ export default async function ToolPage({ params }: { params: Promise<{ tool: str
           }),
         }}
       />
+
+      {/* HowTo is the format an answer engine most readily lifts a procedure
+          from, so the steps are marked up as well as rendered. */}
+      {guide && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "HowTo",
+              "@id": `${SITE_URL}/tools/${tool.slug}#howto`,
+              name: `How to use the ${tool.name}`,
+              description: tool.description,
+              totalTime: "PT2M",
+              tool: { "@type": "HowToTool", name: tool.name },
+              step: guide.steps.map((step, i) => ({
+                "@type": "HowToStep",
+                position: i + 1,
+                name: step.name,
+                text: step.text,
+              })),
+            }),
+          }}
+        />
+      )}
 
       <Section className="pb-12 md:pb-16">
         <div className="container-x">
@@ -107,6 +134,7 @@ export default async function ToolPage({ params }: { params: Promise<{ tool: str
                       | "llms-txt-generator"
                       | "sitemap-checker"
                       | "redirect-checker"
+                      | "internal-link-checker"
                   }
                   placeholder={tool.placeholder}
                   action={tool.action}
@@ -128,6 +156,45 @@ export default async function ToolPage({ params }: { params: Promise<{ tool: str
           </div>
         </div>
       </Section>
+
+      {guide && (
+        <Section className="border-t border-line py-16 md:py-20">
+          <div className="container-x">
+            <div className="mx-auto max-w-3xl">
+              <h2 className="font-display text-[24px] font-bold tracking-[-0.025em] text-ink md:text-[28px]">
+                How to use the {tool.name.toLowerCase()}
+              </h2>
+              <ol className="mt-8 space-y-6">
+                {guide.steps.map((step, i) => (
+                  <li key={step.name} className="grid grid-cols-[2rem_1fr] gap-4">
+                    <span
+                      className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full bg-brand-50 font-mono text-[12px] font-semibold text-brand-600"
+                      aria-hidden="true"
+                    >
+                      {i + 1}
+                    </span>
+                    <div>
+                      <h3 className="font-display text-[16.5px] font-bold tracking-tight text-ink">{step.name}</h3>
+                      <p className="mt-1.5 text-[15px] leading-[1.7] text-ink-muted">{step.text}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+
+              <div className="mt-14 space-y-10">
+                {guide.sections.map((section) => (
+                  <div key={section.heading}>
+                    <h2 className="font-display text-[20px] font-bold tracking-[-0.02em] text-ink md:text-[22px]">
+                      {section.heading}
+                    </h2>
+                    <p className="mt-3 text-[15.5px] leading-[1.75] text-ink-muted">{section.body}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </Section>
+      )}
 
       {/* FAQ — every pair is also in the FAQPage markup above. */}
       <Section className="bg-surface-2 py-16 md:py-20">

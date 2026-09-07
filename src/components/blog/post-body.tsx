@@ -117,6 +117,11 @@ function Block({ block }: { block: PostBlock }) {
                         key={j}
                         className={cn(
                           "px-4 py-3.5 align-top text-[15px] leading-[1.6] text-ink-muted",
+                          // A cell whose whole content is a link is a tap target,
+                          // not inline prose, and 19px of line-height is not one.
+                          // Applied on coarse pointers only so the desktop table
+                          // keeps its compact row height.
+                          "[&_a]:pointer-coarse:inline-flex [&_a]:pointer-coarse:min-h-11 [&_a]:pointer-coarse:items-center",
                           j === 0 && "font-medium text-ink",
                         )}
                       >

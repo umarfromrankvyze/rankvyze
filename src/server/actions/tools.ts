@@ -9,6 +9,7 @@ import { checkRendering, type RenderingReport } from "@/lib/tools/rendering";
 import { generateLlmsTxt, type LlmsTxtReport } from "@/lib/tools/llms-txt";
 import { checkSitemap, type SitemapReport } from "@/lib/tools/sitemap";
 import { checkRedirects, type RedirectReport } from "@/lib/tools/redirects";
+import { checkInternalLinks, type InternalLinkReport } from "@/lib/tools/internal-links";
 import { ToolError } from "@/lib/tools/http";
 import { fail, succeed, type ActionResult } from "@/server/types";
 
@@ -30,7 +31,8 @@ export type ToolReport =
   | RenderingReport
   | LlmsTxtReport
   | SitemapReport
-  | RedirectReport;
+  | RedirectReport
+  | InternalLinkReport;
 
 async function run<T>(work: () => Promise<T>): Promise<ActionResult<T>> {
   try {
@@ -80,4 +82,8 @@ export async function runRedirectCheck(_prev: ActionResult<RedirectReport>, form
 
 export async function runDomainAgeCheck(_prev: ActionResult<DomainAgeReport>, formData: FormData) {
   return run(() => checkDomainAge(inputFrom(formData)));
+}
+
+export async function runInternalLinkCheck(_prev: ActionResult<InternalLinkReport>, formData: FormData) {
+  return run(() => checkInternalLinks(inputFrom(formData)));
 }
