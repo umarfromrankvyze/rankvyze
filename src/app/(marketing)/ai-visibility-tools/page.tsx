@@ -7,13 +7,13 @@ import { Section, SectionHeading } from "@/components/marketing/section";
 import { Reveal } from "@/components/shared/reveal";
 import { FinalCta } from "@/components/marketing/sections/cta";
 import { BreadcrumbJsonLd, FaqJsonLd, PageJsonLd } from "@/components/seo/json-ld";
-import { CHOOSING, PRICING_CHECKED, TOOLS, TOOLS_ANSWER, WHERE_WE_FIT } from "@/content/tools-compared";
+import { CHOOSING, PRICING_CHECKED, SOURCE_LABEL, TOOLS, TOOLS_ANSWER, WHERE_WE_FIT } from "@/content/tools-compared";
 import { GUARANTEE_DAYS, GUARANTEE_MIN_ENGINES, PRICE_LABEL } from "@/lib/guarantee";
 
 const PATH = "/ai-visibility-tools";
 const TITLE = "AI Visibility Tools Compared";
 const DESCRIPTION =
-  "Otterly, Profound, Rank Prompt, Peec and Scrunch — what each costs per tracked prompt, which engines they cover, and who each is actually for. Pricing read from the vendors' own pages.";
+  "Nine AI visibility tools compared from $29 to $800/mo — cost per tracked prompt, engines covered, and who each is for. Every price labelled with where the figure came from.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -40,7 +40,7 @@ export default function ToolsPage() {
             level={1}
             eyebrow="Compared"
             title="AI visibility tools, with the pricing actually checked."
-            description="Most comparison pages in this category quote prices copied from each other. Every figure marked verified below was read off that vendor's own pricing page — and where a vendor doesn't publish pricing, that's what it says."
+            description="Most comparison pages in this category quote prices copied from each other in a circle. Every figure below says where it came from — read off the vendor's own page, reported by a third party, or not published at all."
             align="left"
             className="max-w-3xl"
           />
@@ -86,13 +86,13 @@ export default function ToolsPage() {
                       >
                         {t.name}
                       </a>
-                      {t.verified ? (
+                      {t.source === "vendor" ? (
                         <span className="mt-1 flex items-center gap-1 text-[11.5px] font-medium text-success">
-                          <BadgeCheck className="size-3.5" /> pricing verified
+                          <BadgeCheck className="size-3.5" /> {SOURCE_LABEL.vendor}
                         </span>
                       ) : (
                         <span className="mt-1 flex items-center gap-1 text-[11.5px] text-ink-faint">
-                          <CircleHelp className="size-3.5" /> not published
+                          <CircleHelp className="size-3.5" /> {SOURCE_LABEL[t.source]}
                         </span>
                       )}
                     </td>
@@ -108,9 +108,10 @@ export default function ToolsPage() {
             </table>
           </div>
           <p className="mt-4 text-[12.5px] text-ink-faint">
-            Checked {PRICING_CHECKED}. Cost per prompt is derived, not quoted — it is the headline price divided by the
-            prompts that plan covers, which is the number that actually decides this purchase. Pricing changes; verify
-            on the vendor&apos;s page before you budget.
+            Checked {PRICING_CHECKED}. Every price says where it came from: two were read off the vendor&apos;s own
+            pricing page, five are third-party reports we could not confirm at source, and two vendors publish nothing.
+            Cost per prompt is derived, not quoted — the headline price divided by the prompts that plan covers, which
+            is the number that actually decides this purchase. This category reprices often; confirm before you budget.
           </p>
         </div>
       </Section>

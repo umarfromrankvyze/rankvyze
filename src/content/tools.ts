@@ -551,9 +551,9 @@ export function getTool(slug: string) {
  * a decision rather than an oversight — and so nobody wastes time looking.
  */
 export const COMPARISON_LINK = {
-  href: "/best-ai-seo-tools",
+  href: "/ai-visibility-tools",
   label: "Compare every AI visibility tool",
-  note: "Sourced prices for nine tools, and an honest account of where each one fits.",
+  note: "Nine tools, each price labelled with where the figure came from, and an honest account of where each one fits.",
 };
 
 export const NOT_BUILT = [

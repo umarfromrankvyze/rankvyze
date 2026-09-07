@@ -47,7 +47,7 @@ How the measurement works: analysts ask each tracked prompt on each engine in a 
 - [The ${GUARANTEE_DAYS}-day guarantee](${SITE_URL}/guarantee): Exactly what counts as a mention, how it's judged, and the conditions that void it.
 
 ## Comparisons
-- [Best AI SEO and GEO tools](${SITE_URL}/best-ai-seo-tools): Every AI visibility tool compared with sourced prices, from $29/mo to $800/mo. Most measure only; RankVyze is ${PRICE_LABEL} once and implements the fixes.
+- [AI visibility tools compared](${SITE_URL}/ai-visibility-tools): Nine tools from $29/mo to $800/mo, each price labelled with where the figure came from. Most measure only; RankVyze is ${PRICE_LABEL} once and implements the fixes.
 
 ## Original research
 ### ${BENCH_ANSWER.question}

@@ -132,7 +132,7 @@ export default function ToolsHubPage() {
 
           <div className="mx-auto mt-10 max-w-4xl">
             <Link
-              href="/best-ai-seo-tools"
+              href="/ai-visibility-tools"
               className="group flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-line bg-white p-6 transition-colors hover:border-ink/25"
             >
               <span className="min-w-0">
