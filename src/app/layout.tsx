@@ -41,6 +41,23 @@ const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 const DATAFAST_ID = process.env.NEXT_PUBLIC_DATAFAST_ID;
 const DATAFAST_DOMAIN = process.env.NEXT_PUBLIC_DATAFAST_DOMAIN ?? "rankvyze.com";
 
+/**
+ * Search Console ownership tokens.
+ *
+ * Google is the one engine with no programmatic submission route — it does not
+ * participate in IndexNow, so Search Console is the only way to submit a
+ * sitemap or request indexing. Verification is therefore the gate in front of
+ * every Google indexing action, which is why it reads from the environment:
+ * pasting a value into Vercel is a deploy, whereas editing this file is a code
+ * change, and the person who holds the Search Console account is not
+ * necessarily the person who holds the repo.
+ *
+ * Both are emitted only when set. An empty verification tag is not neutral —
+ * Google treats a malformed token as a failed verification attempt.
+ */
+const GOOGLE_VERIFICATION = process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION;
+const BING_VERIFICATION = process.env.NEXT_PUBLIC_BING_VERIFICATION;
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
@@ -48,11 +65,11 @@ export const metadata: Metadata = {
     template: "%s · RankVyze",
   },
   description:
-    "We rank your business in ChatGPT, Gemini and Claude. If you don't show up in 45 days, we refund you 100%.",
+    "We rank your business in ChatGPT, Gemini and Claude for $99. Not mentioned on 2+ AI engines within 45 days? We refund you 100%.",
   openGraph: {
     title: "RankVyze — Rank higher in AI search",
     description:
-      "We rank your business in ChatGPT, Gemini and Claude. If you don't show up in 45 days, we refund you 100%.",
+      "We rank your business in ChatGPT, Gemini and Claude for $99. Not mentioned on 2+ AI engines within 45 days? We refund you 100%.",
     url: SITE_URL,
     siteName: "RankVyze",
     type: "website",
@@ -63,6 +80,14 @@ export const metadata: Metadata = {
     description: "We rank your business in ChatGPT, Gemini and Claude. Or we refund you 100%.",
   },
   alternates: { canonical: "/" },
+  ...(GOOGLE_VERIFICATION || BING_VERIFICATION
+    ? {
+        verification: {
+          ...(GOOGLE_VERIFICATION ? { google: GOOGLE_VERIFICATION } : {}),
+          ...(BING_VERIFICATION ? { other: { "msvalidate.01": BING_VERIFICATION } } : {}),
+        },
+      }
+    : {}),
 };
 
 export const viewport: Viewport = {
