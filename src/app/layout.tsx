@@ -79,7 +79,7 @@ export const metadata: Metadata = {
     title: "RankVyze — Rank higher in AI search",
     description: "We rank your business in ChatGPT, Gemini and Claude. Or we refund you 100%.",
   },
-  alternates: { canonical: "/" },
+
   ...(GOOGLE_VERIFICATION || BING_VERIFICATION
     ? {
         verification: {

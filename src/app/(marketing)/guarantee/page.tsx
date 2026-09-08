@@ -14,6 +14,7 @@ import {
 } from "@/lib/guarantee";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/guarantee" },
   title: "The 45-day guarantee",
   description: `Mentioned on ${GUARANTEE_MIN_ENGINES}+ AI engines within ${GUARANTEE_DAYS} days, or RankVyze refunds you 100%.`,
 };
