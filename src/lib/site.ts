@@ -23,6 +23,17 @@ export const SITE = {
   /** Where we will actually take customers. Not a claim of offices. */
   areaServed: "Worldwide",
   /**
+   * A named founder is one of the strongest entity signals available, because
+   * it is checkable — a company with a real person attached reads differently
+   * to a model than one with none. No location is published, deliberately.
+   */
+  founder: {
+    name: "Umar Mirza",
+    jobTitle: "Founder",
+    /** Another company by the same person. Real, and worth connecting. */
+    alsoFounded: { name: "Framer to Next.js", url: "https://framertonextjs.com" },
+  },
+  /**
    * Third-party profiles that describe this same entity.
    *
    * Empty until the profiles genuinely exist. A sameAs pointing at a 404 is

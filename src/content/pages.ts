@@ -27,6 +27,20 @@ export const CONTENT_PAGES: ContentPage[] = [
     description: "RankVyze is an Answer Engine Optimization platform. We measure how AI engines see your business and turn the gaps into fixes you can ship.",
     blocks: [
       {
+        heading: "Who runs it",
+        paragraphs: [
+          "RankVyze was founded in 2026 by Umar Mirza, who also founded Framer to Next.js — a converter that turns Framer sites into production Next.js codebases. The two share a starting point: a site that looks finished but that machines cannot read properly is a site that is quietly losing.",
+          "Naming a person matters more here than it looks. A great deal of this industry is anonymous, and a company with nobody attached to it is exactly the profile an answer engine declines to recommend. If you want to ask something before buying, the contact page reaches a human.",
+        ],
+        links: [
+          {
+            label: "Framer to Next.js",
+            href: "https://framertonextjs.com",
+            note: "Also founded by Umar Mirza. Converts Framer sites into maintainable Next.js code.",
+          },
+        ],
+      },
+      {
         heading: "Why we exist",
         paragraphs: [
           "A growing share of buying decisions now start with a question to an AI assistant instead of a search box. Those assistants don't return ten links — they return one or two recommendations. If your business isn't one of them, you're invisible at the exact moment a customer is ready to buy.",

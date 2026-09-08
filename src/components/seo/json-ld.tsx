@@ -16,6 +16,7 @@ import { GUARANTEE_DAYS, GUARANTEE_MIN_ENGINES, PRICE_CENTS } from "@/lib/guaran
 
 const ORG_ID = `${SITE_URL}/#organization`;
 const SITE_ID = `${SITE_URL}/#website`;
+const FOUNDER_ID = `${SITE_URL}/#founder`;
 
 function JsonLd({ data }: { data: Record<string, unknown> | Record<string, unknown>[] }) {
   return (
@@ -47,6 +48,9 @@ export function SiteJsonLd() {
     // signal that doesn't depend on a third party existing, so it is worth
     // getting right while the sameAs profiles are still being created.
     knowsAbout: ENTITY.knowsAbout,
+    // A named, checkable founder. Linked by @id rather than inlined so the
+    // person resolves as one entity across every page that mentions them.
+    founder: { "@id": FOUNDER_ID },
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "customer support",
@@ -68,7 +72,29 @@ export function SiteJsonLd() {
     inLanguage: "en",
   };
 
-  return <JsonLd data={{ "@context": "https://schema.org", "@graph": [organization, website] }} />;
+  const founder = {
+    "@type": "Person",
+    "@id": FOUNDER_ID,
+    name: SITE.founder.name,
+    jobTitle: SITE.founder.jobTitle,
+    url: `${SITE_URL}/about`,
+    worksFor: { "@id": ORG_ID },
+  };
+
+  // The founder's other company, so the two entities resolve as connected
+  // rather than as a coincidence of names. Only the relationship is asserted —
+  // nothing is claimed about that business beyond who founded it.
+  const alsoFounded = {
+    "@type": "Organization",
+    "@id": `${SITE.founder.alsoFounded.url}/#organization`,
+    name: SITE.founder.alsoFounded.name,
+    url: SITE.founder.alsoFounded.url,
+    founder: { "@id": FOUNDER_ID },
+  };
+
+  return (
+    <JsonLd data={{ "@context": "https://schema.org", "@graph": [organization, website, founder, alsoFounded] }} />
+  );
 }
 
 /**
