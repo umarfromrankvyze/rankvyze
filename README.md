@@ -28,6 +28,31 @@ Open http://localhost:3000.
 | Customer — refund pending | `dana@harborfreight.io`   | `demo1234`  | Window missed, refund requested            |
 | Admin                     | `admin@rankvyze.com`      | `admin1234` | Internal console + refund queue            |
 
+## Deploying
+
+**Pushing to `main` deploys to production.** The GitHub repository is connected to
+the Vercel project, so a merged or pushed commit builds and goes live on
+rankvyze.com without anyone running a command. Push work in progress to a branch,
+not to `main`.
+
+Vercel runs `prisma migrate deploy && next build` (see `vercel.json`), so a commit
+carrying a new migration applies it against the production database on deploy.
+
+To deploy manually — a rollback, or a build from an uncommitted state:
+
+```bash
+set -a && . ./.env.vercel.local && set +a
+npx vercel deploy --prod --yes
+```
+
+`.env.vercel.local` holds the Vercel token and is gitignored by the `.env*` rule.
+It is not named `.env.local` on purpose, so the Next build never auto-loads a
+deploy credential.
+
+Blog posts do not need a deploy. They are database rows, so a seed script
+publishes them immediately; `/blog` revalidates within 300s and the sitemap
+within 900s.
+
 ## Switching to PostgreSQL
 
 The schema avoids native enums and scalar lists so it runs unchanged on both databases.
