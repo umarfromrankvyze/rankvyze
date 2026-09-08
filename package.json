@@ -15,7 +15,9 @@
     "postinstall": "prisma generate",
     "typecheck": "tsc --noEmit",
     "db:use-postgres": "node scripts/use-postgres.mjs",
-    "build:icons": "node scripts/build-icons.mjs"
+    "build:icons": "node scripts/build-icons.mjs",
+    "seo:audit": "tsx scripts/index-audit.mts",
+    "seo:indexnow": "tsx scripts/indexnow.mts"
   },
   "dependencies": {
     "@next/third-parties": "^16.3.4",
