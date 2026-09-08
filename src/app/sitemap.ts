@@ -4,6 +4,7 @@ import { publishedSlugs } from "@/lib/blog";
 import { TOOLS } from "@/content/tools";
 import { INDUSTRIES } from "@/content/industries";
 import { ENGINE_GUIDES } from "@/content/engines";
+import { COMPARISONS } from "@/content/comparisons";
 import { GLOSSARY } from "@/content/glossary";
 import { CONTENT_UPDATED, SITE_URL } from "@/lib/site";
 
@@ -35,6 +36,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: "/research/aeo-benchmark", priority: 0.95, freq: "monthly" },
     { path: "/ai-search-visibility", priority: 0.9, freq: "monthly" },
     { path: "/ai-visibility-tools", priority: 0.85, freq: "monthly" },
+    { path: "/vs", priority: 0.85, freq: "monthly" },
     { path: "/glossary", priority: 0.7, freq: "monthly" },
     { path: "/resources", priority: 0.6, freq: "monthly" },
     { path: "/contact", priority: 0.5, freq: "yearly" },
@@ -71,6 +73,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: updated,
       changeFrequency: "monthly" as const,
       priority: 0.85,
+    })),
+    ...COMPARISONS.map((c) => ({
+      url: `${SITE_URL}/vs/${c.slug}`,
+      lastModified: updated,
+      changeFrequency: "monthly" as const,
+      priority: 0.9,
     })),
     ...ENGINE_GUIDES.map((engine) => ({
       url: `${SITE_URL}/rank-in/${engine.slug}`,

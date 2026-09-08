@@ -38,6 +38,7 @@ const COLUMNS = [
       { label: "Engine Guides", href: "/rank-in" },
       { label: "AI Brand Mentions", href: "/ai-brand-mentions" },
       { label: "AI Visibility Tools", href: "/ai-visibility-tools" },
+      { label: "Compared", href: "/vs" },
       { label: "Visibility Scoring", href: "/ai-search-visibility" },
       { label: "Glossary", href: "/glossary" },
       { label: "Blog", href: "/blog" },

@@ -57,4 +57,4 @@ export const SITE = {
  * both untrue and the kind of noisy freshness signal that gets discounted.
  * Bump it when the copy actually changes.
  */
-export const CONTENT_UPDATED = "2026-09-06";
+export const CONTENT_UPDATED = "2026-09-08";

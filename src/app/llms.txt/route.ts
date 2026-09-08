@@ -8,6 +8,7 @@ import { GEO_ANSWER } from "@/content/geo";
 import { VISIBILITY_ANSWER as VIS_ANSWER } from "@/content/visibility";
 import { TOOLS_ANSWER } from "@/content/tools-compared";
 import { BENCHMARK_ANSWER as BENCH_ANSWER } from "@/content/benchmark";
+import { COMPARISONS } from "@/content/comparisons";
 import { GLOSSARY } from "@/content/glossary";
 import { CONTENT_UPDATED, SITE, SITE_URL } from "@/lib/site";
 import { CLAIM_WINDOW_DAYS, GUARANTEE_DAYS, GUARANTEE_MIN_ENGINES, PRICE_LABEL } from "@/lib/guarantee";
@@ -48,6 +49,10 @@ How the measurement works: analysts ask each tracked prompt on each engine in a 
 
 ## Comparisons
 - [AI visibility tools compared](${SITE_URL}/ai-visibility-tools): Nine tools from $29/mo to $800/mo, each price labelled with where the figure came from. Most measure only; RankVyze is ${PRICE_LABEL} once and implements the fixes.
+
+## How RankVyze compares
+Each verdict below names what the other product does better. Written by RankVyze.
+${COMPARISONS.map((c) => `### ${c.name} vs RankVyze\n${c.verdict}\nFull comparison: ${SITE_URL}/vs/${c.slug}`).join("\n\n")}
 
 ## Original research
 ### ${BENCH_ANSWER.question}
