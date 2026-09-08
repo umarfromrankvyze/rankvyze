@@ -41,6 +41,19 @@ const inHeader = (label: string, weight: number, name: string, value?: string): 
   },
 });
 
+const metaGenerator = (label: string, weight: number, needle: string): Matcher => ({
+  label,
+  weight,
+  test: ({ html }) => {
+    for (const tag of html.match(/<meta[^>]*>/gi) ?? []) {
+      if (!/name=["']generator["']/i.test(tag)) continue;
+      const content = /content=["']([^"']*)["']/i.exec(tag)?.[1] ?? "";
+      if (content.toLowerCase().includes(needle.toLowerCase())) return true;
+    }
+    return false;
+  },
+});
+
 /**
  * Generator meta tags are the strongest single signal, so they're weighted to
  * clear the confidence bar on their own. Asset-host signals are weaker: a site
@@ -48,19 +61,19 @@ const inHeader = (label: string, weight: number, name: string, value?: string): 
  */
 const MATCHERS: Record<Exclude<PlatformKey, "OTHER">, Matcher[]> = {
   FRAMER: [
-    inHtml('<meta name="generator" content="Framer">', 70, 'content="Framer'),
+    metaGenerator('<meta name="generator" content="Framer">', 70, "framer"),
     inHtml("framerusercontent.com asset host", 35, "framerusercontent.com"),
     inHtml("data-framer-* attributes in the markup", 30, "data-framer-"),
     inHtml("Framer page metadata script", 20, "__framer"),
   ],
   WEBFLOW: [
-    inHtml('<meta name="generator" content="Webflow">', 70, 'content="webflow'),
+    metaGenerator('<meta name="generator" content="Webflow">', 70, "webflow"),
     inHtml("data-wf-site attribute", 45, "data-wf-site"),
     inHtml("data-wf-page attribute", 30, "data-wf-page"),
     inHtml("website-files.com asset host", 25, "website-files.com"),
   ],
   WORDPRESS: [
-    inHtml('<meta name="generator" content="WordPress">', 70, 'content="wordpress'),
+    metaGenerator('<meta name="generator" content="WordPress">', 70, "wordpress"),
     inHtml("/wp-content/ asset paths", 45, "/wp-content/"),
     inHtml("/wp-includes/ script paths", 30, "/wp-includes/"),
     inHtml("wp-json REST API link", 25, "/wp-json/"),
@@ -80,12 +93,12 @@ const MATCHERS: Record<Exclude<PlatformKey, "OTHER">, Matcher[]> = {
     inHeader("Shopify-branded powered-by header", 40, "powered-by", "shopify"),
   ],
   SQUARESPACE: [
-    inHtml('<meta name="generator" content="Squarespace">', 70, 'content="squarespace'),
+    metaGenerator('<meta name="generator" content="Squarespace">', 70, "squarespace"),
     inHtml("squarespace.com asset host", 40, "squarespace.com/universal"),
     inHtml("Static.SQUARESPACE_CONTEXT bootstrap", 45, "squarespace_context"),
   ],
   WEBSITE_BUILDER_OTHER: [
-    inHtml("Ghost generator tag", 60, 'content="ghost'),
+    metaGenerator("Ghost generator tag", 60, "ghost"),
     inHtml("Duda asset host", 55, "irp.cdn-website.com"),
     inHtml("HubSpot CMS asset host", 55, "hubspotusercontent"),
     inHtml("Bubble app bootstrap", 55, "bubble_page_load_id"),

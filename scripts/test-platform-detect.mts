@@ -22,6 +22,9 @@ const TARGETS = [
   ["squarespace.com", "SQUARESPACE"],
   ["vercel.com", "CODE"],
   ["rankvyze.com", "CODE"],
+  // Regression: its own og:title begins "Framer to Next.js", which the first
+  // version of the generator matcher read as a Framer generator tag.
+  ["framertonextjs.com", "CODE"],
 ];
 
 let pass = 0;
